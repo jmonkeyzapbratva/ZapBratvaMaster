@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+*.md
+.env
+auth_info
+storage/backups
+.replit
+replit.nix

@@ -1,0 +1,95 @@
+# 🤖 BRATVA BOT - WhatsApp Bot Profissional
+
+## Visão Geral
+Bot de WhatsApp completo e profissional com sistema de menus interativos, comandos de brincadeiras, administração de grupos e comandos exclusivos do dono.
+
+## Estrutura do Projeto
+
+```
+/
+├── index.js              # Arquivo principal do bot
+├── package.json          # Dependências e scripts
+├── config/
+│   ├── settings.js       # Configurações (dono, prefixo, etc)
+│   └── messages.js       # Mensagens padrão
+├── commands/
+│   ├── menu.js           # Comandos de menu
+│   ├── fun.js            # Brincadeiras e jogos
+│   ├── admin.js          # Administração de grupos
+│   ├── owner.js          # Comandos do dono (NUKE, etc)
+│   └── utils.js          # Utilidades
+├── handlers/
+│   ├── message.js        # Processador de mensagens
+│   └── group.js          # Eventos de grupo
+├── utils/
+│   ├── logger.js         # Sistema de logs
+│   └── helpers.js        # Funções auxiliares
+├── storage/
+│   ├── database.js       # Banco de dados JSON
+│   └── data/             # Arquivos de dados
+├── GUIA-COMPLETO.md      # Documentação técnica detalhada
+└── Arquivos de Deploy    # fly.toml, railway.json, etc
+```
+
+## Configuração
+
+### Configurar Número do Dono
+1. Edite `config/settings.js`
+2. Altere `ownerNumber` para seu número (formato: 5511999999999)
+3. Altere `ownerName` para seu nome
+
+### Prefixo dos Comandos
+- Padrão: `!`
+- Altere em `config/settings.js` → `prefix`
+
+## Execução
+
+```bash
+# Instalar dependências
+npm install
+
+# Iniciar o bot
+node index.js
+```
+
+## Comandos Principais
+
+### Menus
+- `!menu` - Menu principal
+- `!menubrincadeiras` - Jogos e diversão
+- `!menuadmin` - Administração
+- `!menudono` - Comandos do dono
+
+### Dono
+- `!nuke` - Remove todos os membros
+- `!bc [msg]` - Broadcast
+- `!addadmin @user` - Adiciona admin do bot
+
+### Admin
+- `!ban @user` - Bane usuário
+- `!kick @user` - Remove usuário
+- `!mute` - Silencia grupo
+
+## Tecnologias
+
+- Node.js 20+
+- @whiskeysockets/baileys (WhatsApp API)
+- Express (Keep-alive)
+- Chalk (Logs coloridos)
+
+## Deploy 24/7
+
+O bot está configurado para deploy em:
+- Replit (nativo)
+- Fly.io
+- Railway
+- Render
+
+## Mudanças Recentes
+
+- **Dezembro 2024**: Criação inicial do bot
+  - Sistema completo de menus
+  - Comandos de brincadeiras
+  - Sistema de administração
+  - Comando NUKE (exclusivo dono)
+  - Documentação técnica completa
