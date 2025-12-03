@@ -18,6 +18,7 @@
   "author": "Bratva",
   "license": "MIT",
   "dependencies": {
+    "@octokit/rest": "^22.0.1",
     "@whiskeysockets/baileys": "^6.7.16",
     "axios": "^1.6.2",
     "chalk": "^4.1.2",
