@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const helpers = require('../utils/helpers');
 
 const commands = {
@@ -11,28 +12,34 @@ const commands = {
         
         if (!isImage && !isVideo) {
             return await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Envie ou responda uma imagem/vídeo com o comando !sticker'
+                text: '❌ Envie ou responda uma imagem/vídeo com o comando !sticker\n\n💡 *Dica:* Envie uma imagem com a legenda !sticker'
             });
         }
         
+        await sock.sendMessage(msg.key.remoteJid, {
+            text: '⏳ Criando sticker...'
+        });
+        
         try {
-            let mediaMessage;
+            let mediaMsg;
             if (quotedMsg?.imageMessage) {
-                mediaMessage = { message: { imageMessage: quotedMsg.imageMessage } };
+                mediaMsg = { message: { imageMessage: quotedMsg.imageMessage }, key: msg.key };
             } else if (quotedMsg?.videoMessage) {
-                mediaMessage = { message: { videoMessage: quotedMsg.videoMessage } };
+                mediaMsg = { message: { videoMessage: quotedMsg.videoMessage }, key: msg.key };
             } else {
-                mediaMessage = msg;
+                mediaMsg = msg;
             }
             
-            const media = await sock.downloadMediaMessage(mediaMessage);
+            const media = await downloadMediaMessage(mediaMsg, 'buffer', {});
             
             await sock.sendMessage(msg.key.remoteJid, {
                 sticker: media
-            });
+            }, { quoted: msg });
+            
         } catch (error) {
+            console.error('Erro sticker:', error.message);
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Erro ao criar sticker! Tente novamente.'
+                text: '❌ Erro ao criar sticker!\n\n💡 *Possíveis causas:*\n• Arquivo muito grande\n• Formato não suportado\n• Vídeo muito longo (máx. 10s)'
             });
         }
     },
@@ -45,21 +52,31 @@ const commands = {
         
         if (!isSticker) {
             return await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Responda um sticker com o comando !toimg'
+                text: '❌ Responda um sticker com o comando !toimg\n\n💡 *Dica:* Responda (reply) um sticker existente'
             });
         }
         
+        await sock.sendMessage(msg.key.remoteJid, {
+            text: '⏳ Convertendo sticker...'
+        });
+        
         try {
-            const media = await sock.downloadMediaMessage({
-                message: { stickerMessage: quotedMsg.stickerMessage }
-            });
+            const stickerMsg = { 
+                message: { stickerMessage: quotedMsg.stickerMessage },
+                key: msg.key
+            };
+            
+            const media = await downloadMediaMessage(stickerMsg, 'buffer', {});
             
             await sock.sendMessage(msg.key.remoteJid, {
-                image: media
-            });
+                image: media,
+                caption: '🖼️ Sticker convertido para imagem!'
+            }, { quoted: msg });
+            
         } catch (error) {
+            console.error('Erro toimg:', error.message);
             await sock.sendMessage(msg.key.remoteJid, {
-                text: '❌ Erro ao converter sticker! Tente novamente.'
+                text: '❌ Erro ao converter sticker!\n\n💡 Stickers animados podem não ser convertidos.'
             });
         }
     },
