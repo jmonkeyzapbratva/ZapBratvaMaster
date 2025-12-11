@@ -1,7 +1,7 @@
 const settings = {
     botName: '🤖 BRATVA BOT',
-    ownerNumber: '5511999999999',
-    ownerName: 'Dono',
+    ownerNumber: '5551991015034',
+    ownerName: 'BRATVA',
     prefix: '!',
     language: 'pt-BR',
     

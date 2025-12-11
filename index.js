@@ -3,6 +3,7 @@ const pino = require('pino');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const qrcode = require('qrcode-terminal');
 
 const logger = require('./utils/logger');
 const helpers = require('./utils/helpers');
@@ -10,6 +11,8 @@ const settings = require('./config/settings');
 const db = require('./storage/database');
 const { handleMessage } = require('./handlers/message');
 const { handleGroupParticipants } = require('./handlers/group');
+
+let currentQR = null;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,8 +54,19 @@ const startBot = async () => {
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
         
-        if (qr && !qrDisplayed) {
-            logger.info('QR Code gerado! Escaneie com seu WhatsApp.');
+        if (qr) {
+            currentQR = qr;
+            console.log('\n');
+            console.log('╔══════════════════════════════════════════════════════════╗');
+            console.log('║           📱 ESCANEIE O QR CODE ABAIXO 📱               ║');
+            console.log('║     WhatsApp > Dispositivos Conectados > Conectar       ║');
+            console.log('╚══════════════════════════════════════════════════════════╝');
+            console.log('\n');
+            qrcode.generate(qr, { small: true });
+            console.log('\n');
+            console.log('⏳ Aguardando escaneamento...');
+            console.log('💡 O QR expira em 60 segundos. Se expirar, um novo será gerado.');
+            console.log('\n');
             qrDisplayed = true;
         }
         
