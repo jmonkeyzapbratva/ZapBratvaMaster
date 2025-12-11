@@ -1,0 +1,46 @@
+{
+  "120363406507585231@g.us": {
+    "welcome": true,
+    "goodbye": true,
+    "antiLink": false,
+    "antiFlood": false,
+    "antiBadWords": false,
+    "muted": false,
+    "welcomeMsg": null,
+    "goodbyeMsg": null,
+    "rules": null
+  },
+  "120363423472015271@g.us": {
+    "welcome": true,
+    "goodbye": true,
+    "antiLink": false,
+    "antiFlood": false,
+    "antiBadWords": false,
+    "muted": false,
+    "welcomeMsg": null,
+    "goodbyeMsg": null,
+    "rules": null
+  },
+  "120363023069191291@g.us": {
+    "welcome": true,
+    "goodbye": true,
+    "antiLink": false,
+    "antiFlood": false,
+    "antiBadWords": false,
+    "muted": false,
+    "welcomeMsg": null,
+    "goodbyeMsg": null,
+    "rules": null
+  },
+  "120363422001932109@g.us": {
+    "welcome": true,
+    "goodbye": true,
+    "antiLink": false,
+    "antiFlood": false,
+    "antiBadWords": false,
+    "muted": false,
+    "welcomeMsg": null,
+    "goodbyeMsg": null,
+    "rules": null
+  }
+}

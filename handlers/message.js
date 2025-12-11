@@ -112,8 +112,29 @@ const handleMessage = async (sock, msg) => {
         
         if (!command) return;
         
-        const isOwner = senderNumber === settings.ownerNumber;
+        // Normaliza números para comparação (remove zeros extras, etc)
+        const normalizeNumber = (num) => {
+            let n = num.replace(/\D/g, ''); // Remove tudo que não é dígito
+            // Se começa com 55 e tem 13 dígitos, remove o 9 extra do celular
+            if (n.startsWith('55') && n.length === 13) {
+                n = n.slice(0, 4) + n.slice(5); // 5551991015034 -> 555191015034
+            }
+            return n;
+        };
+        
+        const senderNormalized = normalizeNumber(senderNumber);
+        const ownerNormalized = normalizeNumber(settings.ownerNumber);
+        
+        const isOwner = senderNormalized === ownerNormalized || 
+                        senderNumber === settings.ownerNumber ||
+                        senderNumber.includes(settings.ownerNumber.slice(-8)); // Últimos 8 dígitos
+        
         const isBotAdmin = db.isBotAdmin(senderNumber) || isOwner;
+        
+        // Debug: mostra comparação de números (remova depois de testar)
+        if (text.startsWith(settings.prefix)) {
+            console.log(`[DEBUG] Seu número: ${senderNumber} | Dono configurado: ${settings.ownerNumber} | É dono: ${isOwner}`);
+        }
         
         let isGroupAdmin = false;
         let isBotGroupAdmin = false;
