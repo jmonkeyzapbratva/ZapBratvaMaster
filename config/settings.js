@@ -1,6 +1,7 @@
 const settings = {
     botName: '🤖 BRATVA BOT',
-    ownerNumber: '5551991015034',
+    ownerNumber: '555191015034',
+    ownerLID: '177829396402359', // Seu LID do WhatsApp (obtido automaticamente)
     ownerName: 'BRATVA',
     prefix: '!',
     language: 'pt-BR',

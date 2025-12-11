@@ -20,8 +20,37 @@ const handleMessage = async (sock, msg) => {
         const messageType = Object.keys(msg.message)[0];
         const isGroup = helpers.isGroup(msg.key.remoteJid);
         const sender = isGroup ? msg.key.participant : msg.key.remoteJid;
-        const senderNumber = helpers.extractNumber(sender);
+        let senderNumber = helpers.extractNumber(sender);
         const groupId = isGroup ? msg.key.remoteJid : null;
+        
+        // Se o sender é LID, tenta obter o número real
+        if (sender && sender.includes('@lid')) {
+            // Tenta obter do pushName ou verifiedBizName
+            const pushName = msg.pushName || '';
+            
+            // Em grupos, busca o número real dos participantes
+            if (isGroup) {
+                try {
+                    const groupMeta = await sock.groupMetadata(groupId);
+                    const participant = groupMeta.participants.find(p => p.id === sender);
+                    if (participant && participant.id && !participant.id.includes('@lid')) {
+                        senderNumber = helpers.extractNumber(participant.id);
+                    }
+                } catch (e) {}
+            }
+            
+            // Se ainda é LID, tenta usar o número do próprio bot se for o dono conectado
+            if (senderNumber.includes('lid') || senderNumber.includes('@')) {
+                // Verifica se o pushName corresponde ao nome do dono
+                const botNumber = sock.user?.id?.split(':')[0] || '';
+                // Se o bot e o dono são o mesmo número (você está testando consigo mesmo)
+                if (botNumber === settings.ownerNumber.replace(/^55/, '').replace(/^0/, '') ||
+                    botNumber === settings.ownerNumber ||
+                    settings.ownerNumber.includes(botNumber)) {
+                    senderNumber = settings.ownerNumber;
+                }
+            }
+        }
         
         let text = '';
         if (messageType === 'conversation') {
@@ -112,29 +141,17 @@ const handleMessage = async (sock, msg) => {
         
         if (!command) return;
         
-        // Normaliza números para comparação (remove zeros extras, etc)
-        const normalizeNumber = (num) => {
-            let n = num.replace(/\D/g, ''); // Remove tudo que não é dígito
-            // Se começa com 55 e tem 13 dígitos, remove o 9 extra do celular
-            if (n.startsWith('55') && n.length === 13) {
-                n = n.slice(0, 4) + n.slice(5); // 5551991015034 -> 555191015034
-            }
-            return n;
-        };
+        // Verifica se é o dono (por número OU por LID)
+        const senderClean = senderNumber.replace(/\D/g, '');
+        const ownerClean = settings.ownerNumber.replace(/\D/g, '');
+        const ownerLID = settings.ownerLID || '';
         
-        const senderNormalized = normalizeNumber(senderNumber);
-        const ownerNormalized = normalizeNumber(settings.ownerNumber);
-        
-        const isOwner = senderNormalized === ownerNormalized || 
+        const isOwner = senderClean === ownerClean || 
                         senderNumber === settings.ownerNumber ||
-                        senderNumber.includes(settings.ownerNumber.slice(-8)); // Últimos 8 dígitos
+                        senderClean === ownerLID || // Verifica pelo LID
+                        senderNumber.includes(ownerLID); // Inclui o LID
         
         const isBotAdmin = db.isBotAdmin(senderNumber) || isOwner;
-        
-        // Debug: mostra comparação de números (remova depois de testar)
-        if (text.startsWith(settings.prefix)) {
-            console.log(`[DEBUG] Seu número: ${senderNumber} | Dono configurado: ${settings.ownerNumber} | É dono: ${isOwner}`);
-        }
         
         let isGroupAdmin = false;
         let isBotGroupAdmin = false;
