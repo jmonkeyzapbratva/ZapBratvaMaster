@@ -3,7 +3,8 @@ const pino = require('pino');
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const qrcode = require('qrcode-terminal');
+const qrcodeTerminal = require('qrcode-terminal');
+const QRCode = require('qrcode');
 
 const logger = require('./utils/logger');
 const helpers = require('./utils/helpers');
@@ -13,6 +14,7 @@ const { handleMessage } = require('./handlers/message');
 const { handleGroupParticipants } = require('./handlers/group');
 
 let currentQR = null;
+let botConnected = false;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -56,16 +58,14 @@ const startBot = async () => {
         
         if (qr) {
             currentQR = qr;
+            botConnected = false;
             console.log('\n');
             console.log('╔══════════════════════════════════════════════════════════╗');
-            console.log('║           📱 ESCANEIE O QR CODE ABAIXO 📱               ║');
-            console.log('║     WhatsApp > Dispositivos Conectados > Conectar       ║');
+            console.log('║         📱 ESCANEIE O QR CODE NA PÁGINA WEB 📱          ║');
+            console.log('║                                                          ║');
+            console.log('║   👉 Clique na aba "Webview" ao lado para ver o QR 👈   ║');
+            console.log('║                                                          ║');
             console.log('╚══════════════════════════════════════════════════════════╝');
-            console.log('\n');
-            qrcode.generate(qr, { small: true });
-            console.log('\n');
-            console.log('⏳ Aguardando escaneamento...');
-            console.log('💡 O QR expira em 60 segundos. Se expirar, um novo será gerado.');
             console.log('\n');
             qrDisplayed = true;
         }
@@ -88,6 +88,8 @@ const startBot = async () => {
             logger.success('Bot conectado com sucesso!');
             logger.divider();
             
+            currentQR = null;
+            botConnected = true;
             qrDisplayed = false;
             
             const botNumber = sock.user.id.split(':')[0];
@@ -134,11 +136,15 @@ const startBackupSchedule = () => {
 };
 
 app.get('/', (req, res) => {
+    res.redirect('/qr');
+});
+
+app.get('/status', (req, res) => {
     const stats = db.getStats();
     const uptime = helpers.formatUptime((Date.now() - stats.startTime) / 1000);
     
     res.json({
-        status: 'online',
+        status: botConnected ? 'online' : 'aguardando_conexao',
         bot: settings.botName,
         version: '2.0.0',
         uptime,
@@ -154,44 +160,158 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'healthy' });
 });
 
-app.get('/qr', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>BRATVA BOT - QR Code</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                    color: white;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    min-height: 100vh;
-                    margin: 0;
-                }
-                h1 { color: #00ff88; }
-                .info {
-                    background: rgba(255,255,255,0.1);
-                    padding: 20px;
-                    border-radius: 10px;
-                    margin: 20px;
-                    text-align: center;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>🤖 BRATVA BOT</h1>
-            <div class="info">
-                <p>📱 O QR Code é exibido no console/terminal</p>
-                <p>✅ Escaneie com seu WhatsApp para conectar</p>
-                <p>🔄 Após escanear, o bot estará online!</p>
-            </div>
-        </body>
-        </html>
-    `);
+app.get('/qr', async (req, res) => {
+    if (botConnected) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BRATVA BOT - Conectado!</title>
+                <meta http-equiv="refresh" content="5">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                    }
+                    h1 { color: #00ff88; font-size: 3em; }
+                    .success {
+                        background: rgba(0,255,136,0.2);
+                        border: 2px solid #00ff88;
+                        padding: 40px;
+                        border-radius: 20px;
+                        text-align: center;
+                    }
+                    .emoji { font-size: 80px; }
+                </style>
+            </head>
+            <body>
+                <div class="success">
+                    <div class="emoji">✅</div>
+                    <h1>BOT CONECTADO!</h1>
+                    <p style="font-size: 1.3em;">Seu WhatsApp está conectado ao BRATVA BOT</p>
+                    <p>Mande <strong>!menu</strong> em qualquer conversa para testar</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+    
+    if (!currentQR) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BRATVA BOT - Aguardando</title>
+                <meta http-equiv="refresh" content="3">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                    }
+                    h1 { color: #ffaa00; }
+                    .loading {
+                        background: rgba(255,170,0,0.2);
+                        border: 2px solid #ffaa00;
+                        padding: 40px;
+                        border-radius: 20px;
+                        text-align: center;
+                    }
+                    .spinner {
+                        font-size: 60px;
+                        animation: spin 2s linear infinite;
+                    }
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+                </style>
+            </head>
+            <body>
+                <div class="loading">
+                    <div class="spinner">⏳</div>
+                    <h1>Gerando QR Code...</h1>
+                    <p>Aguarde, a página atualiza automaticamente</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+    
+    try {
+        const qrImage = await QRCode.toDataURL(currentQR, { width: 300, margin: 2 });
+        
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BRATVA BOT - QR Code</title>
+                <meta http-equiv="refresh" content="30">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    h1 { color: #00ff88; margin-bottom: 10px; }
+                    .qr-container {
+                        background: white;
+                        padding: 20px;
+                        border-radius: 20px;
+                        margin: 20px;
+                    }
+                    .qr-container img { display: block; }
+                    .instructions {
+                        background: rgba(255,255,255,0.1);
+                        padding: 20px 30px;
+                        border-radius: 15px;
+                        text-align: left;
+                        max-width: 400px;
+                    }
+                    .step { margin: 10px 0; font-size: 1.1em; }
+                    .highlight { color: #00ff88; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <h1>🤖 BRATVA BOT</h1>
+                <p style="color: #aaa;">Escaneie o QR Code abaixo com seu WhatsApp</p>
+                
+                <div class="qr-container">
+                    <img src="${qrImage}" alt="QR Code" />
+                </div>
+                
+                <div class="instructions">
+                    <div class="step">1️⃣ Abra o <span class="highlight">WhatsApp</span> no celular</div>
+                    <div class="step">2️⃣ Vá em <span class="highlight">Configurações</span> (⚙️)</div>
+                    <div class="step">3️⃣ Toque em <span class="highlight">Dispositivos Conectados</span></div>
+                    <div class="step">4️⃣ Toque em <span class="highlight">Conectar Dispositivo</span></div>
+                    <div class="step">5️⃣ <span class="highlight">Aponte a câmera</span> para este QR Code</div>
+                </div>
+                
+                <p style="color: #888; margin-top: 20px;">⏳ O QR expira em 60s - a página atualiza automaticamente</p>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        res.status(500).send('Erro ao gerar QR Code');
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
