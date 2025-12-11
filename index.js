@@ -12,6 +12,7 @@ const settings = require('./config/settings');
 const db = require('./storage/database');
 const { handleMessage } = require('./handlers/message');
 const { handleGroupParticipants } = require('./handlers/group');
+const wallet = require('./storage/userWallet');
 
 let currentQR = null;
 let botConnected = false;
@@ -100,6 +101,12 @@ const startBot = async () => {
             logger.divider();
             
             startBackupSchedule();
+            
+            wallet.initDatabase().then(() => {
+                logger.info('Banco de dados SMS inicializado');
+            }).catch(err => {
+                logger.error('Erro ao inicializar banco SMS: ' + err.message);
+            });
         }
     });
     

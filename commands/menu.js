@@ -28,6 +28,9 @@ const commands = {
 ║  🛠️ *${prefix}menuutils*              ║
 ║     Ferramentas úteis                ║
 ║                                      ║
+║  📱 *${prefix}sms*                    ║
+║     Números virtuais SMS             ║
+║                                      ║
 ║  ℹ️ *${prefix}info*                   ║
 ║     Informações do bot               ║
 ║                                      ║

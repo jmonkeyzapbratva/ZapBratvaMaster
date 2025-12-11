@@ -9,6 +9,7 @@ const funCommands = require('../commands/fun');
 const adminCommands = require('../commands/admin');
 const ownerCommands = require('../commands/owner');
 const utilCommands = require('../commands/utils');
+const smsCommands = require('../commands/sms');
 
 const floodControl = new Map();
 
@@ -204,7 +205,8 @@ const handleMessage = async (sock, msg) => {
             ...funCommands,
             ...adminCommands,
             ...ownerCommands,
-            ...utilCommands
+            ...utilCommands,
+            ...smsCommands
         };
         
         if (allCommands[command]) {
