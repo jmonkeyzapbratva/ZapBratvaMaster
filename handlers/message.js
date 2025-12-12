@@ -10,6 +10,10 @@ const adminCommands = require('../commands/admin');
 const ownerCommands = require('../commands/owner');
 const utilCommands = require('../commands/utils');
 const smsCommands = require('../commands/sms');
+const consultaCommands = require('../commands/consultas');
+const guerraCommands = require('../commands/guerra');
+const jogosCommands = require('../commands/jogos');
+const brincadeirasCommands = require('../commands/brincadeiras');
 
 const floodControl = new Map();
 
@@ -171,6 +175,8 @@ const handleMessage = async (sock, msg) => {
             );
         }
         
+        const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+        
         const context = {
             sock,
             msg,
@@ -182,10 +188,11 @@ const handleMessage = async (sock, msg) => {
             isGroup,
             isOwner,
             isBotAdmin,
-            isGroupAdmin,
+            isAdmin: isGroupAdmin || isOwner,
             isBotGroupAdmin,
             groupMetadata,
-            prefix: settings.prefix
+            prefix: settings.prefix,
+            mentions: mentionedJids
         };
         
         const groupName = isGroup ? groupMetadata.subject : 'Privado';
@@ -206,7 +213,11 @@ const handleMessage = async (sock, msg) => {
             ...adminCommands,
             ...ownerCommands,
             ...utilCommands,
-            ...smsCommands
+            ...smsCommands,
+            ...consultaCommands,
+            ...guerraCommands,
+            ...jogosCommands,
+            ...brincadeirasCommands
         };
         
         if (allCommands[command]) {
