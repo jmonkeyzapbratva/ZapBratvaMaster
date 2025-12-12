@@ -24,10 +24,11 @@ const commands = {
 │🇨🇦 ${prefix}menudono
 │🇨🇦 ${prefix}menuutils
 │🇨🇦 ${prefix}menudownloads
-│🇨🇦 ${prefix}menulogos
-│🇨🇦 ${prefix}menuefeitos
+│🇨🇦 ${prefix}menustickers
 │🇨🇦 ${prefix}menujogos
-│🇨🇦 ${prefix}menupesquisa
+│🇨🇦 ${prefix}menueconomia
+│🇨🇦 ${prefix}menuconsultas
+│🇨🇦 ${prefix}menuguerra
 │🇨🇦 ${prefix}sms
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ *DIVERSOS* ⪨━━━

@@ -14,6 +14,9 @@ const consultaCommands = require('../commands/consultas');
 const guerraCommands = require('../commands/guerra');
 const jogosCommands = require('../commands/jogos');
 const brincadeirasCommands = require('../commands/brincadeiras');
+const downloadCommands = require('../commands/downloads');
+const stickerCommands = require('../commands/stickers');
+const economiaCommands = require('../commands/economia');
 
 const floodControl = new Map();
 
@@ -217,7 +220,10 @@ const handleMessage = async (sock, msg) => {
             ...consultaCommands,
             ...guerraCommands,
             ...jogosCommands,
-            ...brincadeirasCommands
+            ...brincadeirasCommands,
+            ...downloadCommands,
+            ...stickerCommands,
+            ...economiaCommands
         };
         
         if (allCommands[command]) {

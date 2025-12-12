@@ -17,7 +17,15 @@ Bot de WhatsApp da Alianca BRATVA com sistema de menus interativos, comandos de 
 │   ├── fun.js            # Brincadeiras e jogos
 │   ├── admin.js          # Administração de grupos
 │   ├── owner.js          # Comandos do dono (NUKE, etc)
-│   └── utils.js          # Utilidades
+│   ├── utils.js          # Utilidades
+│   ├── sms.js            # Sistema SMS Virtual
+│   ├── consultas.js      # Consultas (IP, CEP, DDD, DNS)
+│   ├── guerra.js         # Comandos de guerra/admin grupo
+│   ├── jogos.js          # Jogos (dado, slot, roleta)
+│   ├── brincadeiras.js   # Brincadeiras (ship, gay, etc)
+│   ├── downloads.js      # Downloads (TikTok, música)
+│   ├── stickers.js       # Criação de stickers
+│   └── economia.js       # Sistema de economia
 ├── handlers/
 │   ├── message.js        # Processador de mensagens
 │   └── group.js          # Eventos de grupo
@@ -26,9 +34,11 @@ Bot de WhatsApp da Alianca BRATVA com sistema de menus interativos, comandos de 
 │   └── helpers.js        # Funções auxiliares
 ├── storage/
 │   ├── database.js       # Banco de dados JSON
+│   ├── userWallet.js     # Carteira SMS (PostgreSQL)
 │   └── data/             # Arquivos de dados
-├── GUIA-COMPLETO.md      # Documentação técnica detalhada
-└── Arquivos de Deploy    # fly.toml, railway.json, etc
+├── services/
+│   └── fivesim.js        # Integração 5sim.net
+└── GUIA-COMPLETO.md      # Documentação técnica
 ```
 
 ## Configuração
@@ -45,45 +55,101 @@ Bot de WhatsApp da Alianca BRATVA com sistema de menus interativos, comandos de 
 ## Execução
 
 ```bash
-# Instalar dependências
 npm install
-
-# Iniciar o bot
 node index.js
 ```
 
-## Comandos Principais
+## Comandos Disponíveis
 
-### Menus
+### 📋 Menus
 - `!menu` - Menu principal
 - `!menubrincadeiras` - Jogos e diversão
-- `!menuadmin` - Administração
+- `!menuadmin` - Administração de grupos
 - `!menudono` - Comandos do dono
+- `!menudownloads` - Downloads de mídia
+- `!menustickers` - Criação de stickers
+- `!menujogos` - Jogos e cassino
+- `!menueconomia` - Sistema de economia
+- `!menuconsultas` - Consultas (IP, CEP, etc)
+- `!menuguerra` - Comandos de guerra
 
-### Dono
-- `!nuke` - Remove todos os membros
-- `!bc [msg]` - Broadcast
-- `!addadmin @user` - Adiciona admin do bot
+### 🔍 Consultas
+- `!ip [ip]` - Consulta informações de IP
+- `!cep [cep]` - Consulta CEP
+- `!ddd [ddd]` - Consulta DDD
+- `!dns [dominio]` - Consulta DNS
+- `!clima [cidade]` - Consulta clima
+- `!whois [dominio]` - Consulta WHOIS
+- `!calcular [expr]` - Calculadora
+- `!encurtar [link]` - Encurtador de URL
 
-### Admin
+### ⚔️ Guerra/Admin
+- `!nuke` - Remove todos os membros (dono)
+- `!destrava` - Destrava grupo
+- `!banghost` - Remove membros fantasmas
 - `!ban @user` - Bane usuário
 - `!kick @user` - Remove usuário
-- `!mute` - Silencia grupo
+- `!add [numero]` - Adiciona membro
+- `!promote @user` - Promove a admin
+- `!demote @user` - Rebaixa admin
+- `!mute` - Muta grupo
+- `!unmute` - Desmuta grupo
+- `!link` - Link do grupo
+- `!tagall` - Marca todos
+- `!hidetag` - Marca todos (oculto)
 
-## Tecnologias
+### 🎲 Jogos
+- `!dado` - Joga dado
+- `!moeda` - Cara ou coroa
+- `!ppt [opcao]` - Pedra, papel, tesoura
+- `!slot` - Caça-níquel
+- `!roleta` - Roleta russa
+- `!sorteio` - Sorteia membro
+- `!chance [texto]` - Porcentagem aleatória
+- `!escolher [op1,op2]` - Escolhe opção
+- `!verdade` - Verdade aleatória
+- `!desafio` - Desafio aleatório
 
-- Node.js 20+
-- @whiskeysockets/baileys (WhatsApp API)
-- Express (Keep-alive)
-- Chalk (Logs coloridos)
+### 😂 Brincadeiras
+- `!piada` - Piada aleatória
+- `!cantada` - Cantada aleatória
+- `!frase` - Frase motivacional
+- `!fato` - Fato curioso
+- `!ship` - Shipa pessoas
+- `!gay @user` - Gaymetro
+- `!gado @user` - Gadometro
+- `!corno @user` - Cornometro
+- `!beijar @user` - Beija alguém
+- `!tapa @user` - Dá tapa
 
-## Deploy 24/7
+### 💰 Economia
+- `!daily` - Prêmio diário
+- `!trabalhar` - Trabalha por dinheiro
+- `!crime` - Comete crime
+- `!carteira` - Ver saldo
+- `!depositar [valor]` - Deposita no banco
+- `!sacar [valor]` - Saca do banco
+- `!transferir @user [valor]` - Transfere
+- `!ranking` - Top ricos
 
-O bot está configurado para deploy em:
-- Replit (nativo)
-- Fly.io
-- Railway
-- Render
+### 🎨 Stickers
+- `!sticker` - Cria sticker
+- `!s` - Atalho sticker
+- `!toimg` - Sticker para imagem
+- `!emojimix [e1] [e2]` - Mistura emojis
+
+### 📥 Downloads
+- `!play [nome]` - Busca música
+- `!tiktok [link]` - Baixa TikTok
+- `!letra [musica]` - Letra de música
+
+### 📱 SMS Virtual
+- `!sms` - Menu SMS
+- `!paises` - Lista países
+- `!servicos` - Lista serviços
+- `!comprar [servico] [pais]` - Compra número
+- `!meusnumeros` - Números ativos
+- `!saldo` - Saldo carteira
 
 ## Sistema SMS Virtual
 
@@ -92,33 +158,32 @@ O bot está configurado para deploy em:
 - Taxa de conversão: RUB × 0.065 × 2.0 = preço final em BRL
 - Margem de lucro: 100%
 
-### Comandos SMS
-- `!sms` - Menu principal do sistema SMS
-- `!paises` - Lista países disponíveis
-- `!servicos` - Lista serviços (WhatsApp, Telegram, etc)
-- `!precos [país]` - Ver preços do país
-- `!comprar [serviço] [país]` - Comprar número virtual
-- `!meusnumeros` - Ver números ativos
-- `!saldo` - Ver saldo da carteira
-- `!historico` - Histórico de compras
-- `!cancelar [ID]` - Cancelar e reembolsar
-
 ### Comandos Dono (SMS)
-- `!addsaldo [número] [valor]` - Adicionar saldo ao usuário
-- `!saldoapi` - Ver saldo da conta 5sim
+- `!addsaldo [número] [valor]` - Adicionar saldo
+- `!saldoapi` - Ver saldo 5sim
 
 ## Mudanças Recentes
 
-- **Dezembro 2024**: Sistema SMS Virtual com 5sim.net
-  - Integração com API 5sim.net
-  - Sistema de carteira virtual por usuário
-  - Conversão RUB → BRL com margem 100%
-  - Correção do bug @lid nas menções
-  - Polling automático para receber códigos SMS
+### Dezembro 2024 - Expansão Massiva
+- Sistema completo de consultas (IP, CEP, DDD, DNS, clima)
+- Comandos de guerra (nuke, destrava, banghost)
+- Sistema de economia (daily, trabalhar, crime, banco)
+- Jogos expandidos (slot, roleta, sorteio)
+- Brincadeiras (ship, gay, gado, corno, metros)
+- Sistema de stickers (criar, converter)
+- Downloads (TikTok, música)
+- Menus elegantes estilo BRATVA 🇨🇦
 
-- **Dezembro 2024**: Criação inicial do bot
-  - Sistema completo de menus
-  - Comandos de brincadeiras
-  - Sistema de administração
-  - Comando NUKE (exclusivo dono)
-  - Documentação técnica completa
+### Sistema SMS Virtual
+- Integração com API 5sim.net
+- Sistema de carteira virtual
+- Conversão RUB → BRL com margem 100%
+
+## Tecnologias
+
+- Node.js 20+
+- @whiskeysockets/baileys (WhatsApp API)
+- Express (Keep-alive)
+- PostgreSQL (Carteiras SMS)
+- Axios (Requisições HTTP)
+- Chalk (Logs coloridos)
