@@ -9,6 +9,11 @@ const activePolling = new Map();
 const RUB_TO_BRL = 0.065;
 const PROFIT_MARGIN = 2.0;
 
+const HEADER = `
+   ╭━━━━━━━━━━━━━━━━━━━━╮
+   │  🇨🇦 *ALIANCA BRATVA* 🇨🇦  │
+   ╰━━━━━━━━━━━━━━━━━━━━╯`;
+
 const formatMoney = (value) => {
     return `R$ ${parseFloat(value).toFixed(2)}`;
 };
@@ -26,41 +31,39 @@ const smsCommands = {
         await wallet.createUser(senderNumber);
         const balance = await wallet.getBalance(senderNumber);
 
-        const menu = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃    *SMS VIRTUAL*          ┃
-┃    Numeros Temporarios    ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃                           ┃
-┃  *Seu Saldo:* ${formatMoney(balance)}
-┃                           ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  *COMANDOS:*              ┃
-┃                           ┃
-┃  *${settings.prefix}paises*              ┃
-┃  Ver paises disponiveis   ┃
-┃                           ┃
-┃  *${settings.prefix}servicos*            ┃
-┃  WhatsApp, Telegram...    ┃
-┃                           ┃
-┃  *${settings.prefix}precos* [pais]       ┃
-┃  Ver tabela de precos     ┃
-┃                           ┃
-┃  *${settings.prefix}comprar* [srv] [pais]┃
-┃  Comprar numero virtual   ┃
-┃                           ┃
-┃  *${settings.prefix}meusnumeros*         ┃
-┃  Ver numeros ativos       ┃
-┃                           ┃
-┃  *${settings.prefix}saldo*               ┃
-┃  Consultar saldo          ┃
-┃                           ┃
-┃  *${settings.prefix}historico*           ┃
-┃  Suas compras anteriores  ┃
-┃                           ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+        const menu = `${HEADER}
 
-*Exemplo:* ${settings.prefix}comprar whatsapp russia
+  ┌─────────────────────┐
+  │    *SMS VIRTUAL*         │
+  │   Numeros Temporarios    │
+  └─────────────────────┘
+
+  *Seu Saldo:* ${formatMoney(balance)}
+
+  ╭───────────────────────╮
+  │ *${settings.prefix}paises*              │
+  │  Ver paises disponiveis   │
+  ├───────────────────────┤
+  │ *${settings.prefix}servicos*            │
+  │  WhatsApp, Telegram...    │
+  ├───────────────────────┤
+  │ *${settings.prefix}precos* [pais]       │
+  │  Ver tabela de precos     │
+  ├───────────────────────┤
+  │ *${settings.prefix}comprar* [srv] [pais]│
+  │  Comprar numero virtual   │
+  ├───────────────────────┤
+  │ *${settings.prefix}meusnumeros*         │
+  │  Ver numeros ativos       │
+  ├───────────────────────┤
+  │ *${settings.prefix}saldo*               │
+  │  Consultar saldo          │
+  ├───────────────────────┤
+  │ *${settings.prefix}historico*           │
+  │  Suas compras anteriores  │
+  ╰───────────────────────╯
+
+  *Exemplo:* ${settings.prefix}comprar whatsapp russia
 `;
 
         await sock.sendMessage(remoteJid, { text: menu });
@@ -70,25 +73,24 @@ const smsCommands = {
         const { sock, msg } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        let lista = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   *PAISES DISPONIVEIS*    ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+        let lista = `${HEADER}
+
+  ┌─────────────────────┐
+  │  *PAISES DISPONIVEIS*    │
+  └─────────────────────┘
 
 `;
 
-        const entries = Object.entries(POPULAR_COUNTRIES);
-        for (let i = 0; i < entries.length; i++) {
-            const [code, info] = entries[i];
-            lista += `${info.emoji} *${info.name}*\n`;
-            lista += `   Codigo: \`${code}\`\n\n`;
+        for (const [code, info] of Object.entries(POPULAR_COUNTRIES)) {
+            lista += `  ${info.emoji} *${info.name}*\n`;
+            lista += `     Codigo: \`${code}\`\n\n`;
         }
 
-        lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        lista += `  ─────────────────────
 
-*Como usar:*
-${settings.prefix}precos russia
-${settings.prefix}comprar whatsapp russia
+  *Como usar:*
+  ${settings.prefix}precos russia
+  ${settings.prefix}comprar whatsapp russia
 `;
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -98,23 +100,24 @@ ${settings.prefix}comprar whatsapp russia
         const { sock, msg } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        let lista = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   *SERVICOS DISPONIVEIS*  ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+        let lista = `${HEADER}
+
+  ┌─────────────────────┐
+  │  *SERVICOS DISPONIVEIS*  │
+  └─────────────────────┘
 
 `;
 
         for (const [code, info] of Object.entries(POPULAR_SERVICES)) {
-            lista += `${info.emoji} *${info.name}*\n`;
-            lista += `   Codigo: \`${code}\`\n\n`;
+            lista += `  ${info.emoji} *${info.name}*\n`;
+            lista += `     Codigo: \`${code}\`\n\n`;
         }
 
-        lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        lista += `  ─────────────────────
 
-*Como usar:*
-${settings.prefix}comprar whatsapp russia
-${settings.prefix}comprar telegram brazil
+  *Como usar:*
+  ${settings.prefix}comprar whatsapp russia
+  ${settings.prefix}comprar telegram brazil
 `;
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -159,16 +162,17 @@ ${settings.prefix}comprar telegram brazil
 
             priceList.sort((a, b) => a.price - b.price);
 
-            let lista = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  ${countryInfo.emoji} *${countryInfo.name.toUpperCase()}*
-┃  Ordenado por preco       ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+            let lista = `${HEADER}
+
+  ┌─────────────────────┐
+  │  ${countryInfo.emoji} *${countryInfo.name.toUpperCase()}*
+  │  Ordenado por preco      │
+  └─────────────────────┘
 
 `;
 
             if (priceList.length === 0) {
-                lista += `Nenhum servico disponivel\n\n`;
+                lista += `  Nenhum servico disponivel\n\n`;
                 
                 const otherPrices = [];
                 for (const [svc, priceInfo] of Object.entries(countryPrices)) {
@@ -178,22 +182,22 @@ ${settings.prefix}comprar telegram brazil
                 otherPrices.sort((a, b) => a.price - b.price);
                 
                 if (otherPrices.length > 0) {
-                    lista += `*Outros servicos:*\n`;
+                    lista += `  *Outros servicos:*\n`;
                     for (const item of otherPrices.slice(0, 10)) {
-                        lista += `  ${item.code}: ${formatMoney(item.price)}\n`;
+                        lista += `    ${item.code}: ${formatMoney(item.price)}\n`;
                     }
                 }
             } else {
                 for (let i = 0; i < priceList.length; i++) {
                     const item = priceList[i];
                     const rank = i + 1;
-                    lista += `*${rank}.* ${item.emoji} ${item.name}\n`;
-                    lista += `   ${formatMoney(item.price)} (${item.count} disp)\n\n`;
+                    lista += `  *${rank}.* ${item.emoji} ${item.name}\n`;
+                    lista += `      ${formatMoney(item.price)} (${item.count} disp)\n\n`;
                 }
             }
 
-            lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
-*Comprar:* ${settings.prefix}comprar [servico] ${country}
+            lista += `  ─────────────────────
+  *Comprar:* ${settings.prefix}comprar [servico] ${country}
 `;
 
             await sock.sendMessage(remoteJid, { text: lista });
@@ -279,26 +283,27 @@ ${settings.prefix}comprar telegram brazil
             await wallet.deductBalance(senderNumber, actualPrice, `${service.toUpperCase()} - ${countryInfo.name}`);
             await wallet.saveActivation(senderNumber, result.activationId, result.phoneNumber, service, country, actualPrice);
 
-            const successMsg = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   *NUMERO OBTIDO*         ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+            const successMsg = `${HEADER}
 
-*Numero:* +${result.phoneNumber}
+  ┌─────────────────────┐
+  │   *NUMERO OBTIDO*        │
+  └─────────────────────┘
 
-${serviceInfo.emoji} *Servico:* ${serviceInfo.name}
-${countryInfo.emoji} *Pais:* ${countryInfo.name}
-*Custo:* ${formatMoney(actualPrice)}
+  *Numero:* +${result.phoneNumber}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ${serviceInfo.emoji} *Servico:* ${serviceInfo.name}
+  ${countryInfo.emoji} *Pais:* ${countryInfo.name}
+  *Custo:* ${formatMoney(actualPrice)}
 
-*Aguardando SMS...*
-O codigo sera enviado automaticamente!
+  ─────────────────────
 
-*Tempo limite:* 15 minutos
+  *Aguardando SMS...*
+  O codigo sera enviado automaticamente!
 
-Para cancelar e reembolsar:
-${settings.prefix}cancelar ${result.activationId}
+  *Tempo limite:* 15 minutos
+
+  Para cancelar e reembolsar:
+  ${settings.prefix}cancelar ${result.activationId}
 `;
 
             await sock.sendMessage(remoteJid, { text: successMsg });
@@ -361,15 +366,16 @@ ${settings.prefix}cancelar ${result.activationId}
         const user = await wallet.getUser(senderNumber);
 
         await sock.sendMessage(remoteJid, {
-            text: `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃      *SEU SALDO*          ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+            text: `${HEADER}
 
-*Disponivel:* ${formatMoney(balance)}
-*Total gasto:* ${formatMoney(user?.total_spent || 0)}
+  ┌─────────────────────┐
+  │      *SEU SALDO*         │
+  └─────────────────────┘
 
-Para adicionar saldo, fale com o admin!
+  *Disponivel:* ${formatMoney(balance)}
+  *Total gasto:* ${formatMoney(user?.total_spent || 0)}
+
+  Para adicionar saldo, fale com o admin!
 `
         });
     },
@@ -387,24 +393,25 @@ Para adicionar saldo, fale com o admin!
             return;
         }
 
-        let lista = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   *NUMEROS ATIVOS*        ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+        let lista = `${HEADER}
+
+  ┌─────────────────────┐
+  │   *NUMEROS ATIVOS*       │
+  └─────────────────────┘
 
 `;
 
         for (const act of activations) {
             const serviceInfo = POPULAR_SERVICES[act.service] || { name: act.service, emoji: '' };
-            lista += `${serviceInfo.emoji} *${serviceInfo.name}*\n`;
-            lista += `   Numero: +${act.phone_number}\n`;
-            lista += `   ID: \`${act.activation_id}\`\n`;
-            lista += `   Status: ${act.status}\n`;
-            lista += `   Codigo: ${act.sms_code || 'Aguardando...'}\n\n`;
+            lista += `  ${serviceInfo.emoji} *${serviceInfo.name}*\n`;
+            lista += `     Numero: +${act.phone_number}\n`;
+            lista += `     ID: \`${act.activation_id}\`\n`;
+            lista += `     Status: ${act.status}\n`;
+            lista += `     Codigo: ${act.sms_code || 'Aguardando...'}\n\n`;
         }
 
-        lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Para cancelar: ${settings.prefix}cancelar [ID]`;
+        lista += `  ─────────────────────
+  Para cancelar: ${settings.prefix}cancelar [ID]`;
 
         await sock.sendMessage(remoteJid, { text: lista });
     },
@@ -422,10 +429,11 @@ Para cancelar: ${settings.prefix}cancelar [ID]`;
             return;
         }
 
-        let lista = `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   *HISTORICO*             ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+        let lista = `${HEADER}
+
+  ┌─────────────────────┐
+  │      *HISTORICO*         │
+  └─────────────────────┘
 
 `;
 
@@ -433,8 +441,8 @@ Para cancelar: ${settings.prefix}cancelar [ID]`;
             const serviceInfo = POPULAR_SERVICES[act.service] || { name: act.service, emoji: '' };
             const date = new Date(act.created_at).toLocaleDateString('pt-BR');
             const statusIcon = act.status === 'completed' ? '[OK]' : act.status === 'cancelled' ? '[X]' : '[...]';
-            lista += `${serviceInfo.emoji} ${serviceInfo.name}\n`;
-            lista += `   ${date} ${statusIcon} ${formatMoney(act.cost)}\n\n`;
+            lista += `  ${serviceInfo.emoji} ${serviceInfo.name}\n`;
+            lista += `     ${date} ${statusIcon} ${formatMoney(act.cost)}\n\n`;
         }
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -528,16 +536,17 @@ async function pollForSMS(sock, remoteJid, senderNumber, activationId, serviceIn
                 await smsService.finishActivation(activationId);
 
                 await sock.sendMessage(remoteJid, {
-                    text: `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃   *CODIGO RECEBIDO*       ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                    text: `${HEADER}
 
-${serviceInfo.emoji} *Servico:* ${serviceInfo.name}
+  ┌─────────────────────┐
+  │   *CODIGO RECEBIDO*      │
+  └─────────────────────┘
 
-*CODIGO:* ${code}
+  ${serviceInfo.emoji} *Servico:* ${serviceInfo.name}
 
-Ativacao concluida!
+  *CODIGO:* ${code}
+
+  Ativacao concluida!
 `
                 });
             } else if (status.status === 'CANCELLED' || status.status === 'TIMEOUT') {

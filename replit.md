@@ -1,7 +1,7 @@
-# 🤖 BRATVA BOT - WhatsApp Bot Profissional
+# 🇨🇦 ALIANCA BRATVA - WhatsApp Bot Profissional
 
 ## Visão Geral
-Bot de WhatsApp completo e profissional com sistema de menus interativos, comandos de brincadeiras, administração de grupos e comandos exclusivos do dono.
+Bot de WhatsApp da Alianca BRATVA com sistema de menus interativos, comandos de brincadeiras, administração de grupos, comandos exclusivos do dono e sistema completo de venda de números virtuais SMS.
 
 ## Estrutura do Projeto
 

@@ -1,7 +1,8 @@
 const settings = {
-    botName: '🤖 BRATVA BOT',
+    botName: 'BRATVA',
+    botVersion: '3.0.0',
     ownerNumber: '555191015034',
-    ownerLID: '177829396402359', // Seu LID do WhatsApp (obtido automaticamente)
+    ownerLID: '177829396402359',
     ownerName: 'BRATVA',
     prefix: '!',
     language: 'pt-BR',
@@ -22,8 +23,8 @@ const settings = {
     backupInterval: 6 * 60 * 60 * 1000,
     
     badWords: [
-        'palavrão1',
-        'palavrão2'
+        'palavrao1',
+        'palavrao2'
     ],
     
     allowedLinks: [
