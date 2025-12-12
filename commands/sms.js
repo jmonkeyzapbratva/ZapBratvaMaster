@@ -27,41 +27,40 @@ const smsCommands = {
         const balance = await wallet.getBalance(senderNumber);
 
         const menu = `
-╔══════════════════════════════════════╗
-║   📱 *SMS VIRTUAL - NÚMEROS TEMP*    ║
-╠══════════════════════════════════════╣
-║                                      ║
-║  💰 *Seu Saldo:* ${formatMoney(balance).padEnd(15)}    ║
-║                                      ║
-╠══════════════════════════════════════╣
-║  📋 *COMANDOS DISPONÍVEIS:*          ║
-║                                      ║
-║  ${settings.prefix}paises                       ║
-║  └ Ver países disponíveis            ║
-║                                      ║
-║  ${settings.prefix}servicos                     ║
-║  └ Ver serviços (WhatsApp, etc)      ║
-║                                      ║
-║  ${settings.prefix}precos [país]                ║
-║  └ Ver preços do país                ║
-║  └ Ex: ${settings.prefix}precos russia          ║
-║                                      ║
-║  ${settings.prefix}comprar [serviço] [país]     ║
-║  └ Comprar número virtual            ║
-║  └ Ex: ${settings.prefix}comprar whatsapp russia║
-║                                      ║
-║  ${settings.prefix}meusnumeros                  ║
-║  └ Ver números ativos                ║
-║                                      ║
-║  ${settings.prefix}saldo                        ║
-║  └ Ver seu saldo                     ║
-║                                      ║
-║  ${settings.prefix}historico                    ║
-║  └ Histórico de compras              ║
-║                                      ║
-╚══════════════════════════════════════╝
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃    *SMS VIRTUAL*          ┃
+┃    Numeros Temporarios    ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                           ┃
+┃  *Seu Saldo:* ${formatMoney(balance)}
+┃                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  *COMANDOS:*              ┃
+┃                           ┃
+┃  *${settings.prefix}paises*              ┃
+┃  Ver paises disponiveis   ┃
+┃                           ┃
+┃  *${settings.prefix}servicos*            ┃
+┃  WhatsApp, Telegram...    ┃
+┃                           ┃
+┃  *${settings.prefix}precos* [pais]       ┃
+┃  Ver tabela de precos     ┃
+┃                           ┃
+┃  *${settings.prefix}comprar* [srv] [pais]┃
+┃  Comprar numero virtual   ┃
+┃                           ┃
+┃  *${settings.prefix}meusnumeros*         ┃
+┃  Ver numeros ativos       ┃
+┃                           ┃
+┃  *${settings.prefix}saldo*               ┃
+┃  Consultar saldo          ┃
+┃                           ┃
+┃  *${settings.prefix}historico*           ┃
+┃  Suas compras anteriores  ┃
+┃                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-💡 *Dica:* Para receber códigos SMS, primeiro adicione saldo!
+*Exemplo:* ${settings.prefix}comprar whatsapp russia
 `;
 
         await sock.sendMessage(remoteJid, { text: menu });
@@ -72,24 +71,24 @@ const smsCommands = {
         const remoteJid = msg.key.remoteJid;
 
         let lista = `
-╔══════════════════════════════════════╗
-║   🌍 *PAÍSES DISPONÍVEIS*            ║
-╠══════════════════════════════════════╣
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   *PAISES DISPONIVEIS*    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 `;
 
-        for (const [code, info] of Object.entries(POPULAR_COUNTRIES)) {
-            lista += `║  ${info.emoji} *${info.name}*\n`;
-            lista += `║  └ Código: ${code} | Tel: ${info.code}\n║\n`;
+        const entries = Object.entries(POPULAR_COUNTRIES);
+        for (let i = 0; i < entries.length; i++) {
+            const [code, info] = entries[i];
+            lista += `${info.emoji} *${info.name}*\n`;
+            lista += `   Codigo: \`${code}\`\n\n`;
         }
 
-        lista += `╚══════════════════════════════════════╝
+        lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📝 *Como usar:*
+*Como usar:*
+${settings.prefix}precos russia
 ${settings.prefix}comprar whatsapp russia
-└ Compra número da Rússia para WhatsApp
-
-${settings.prefix}precos brazil
-└ Ver preços do Brasil
 `;
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -100,24 +99,22 @@ ${settings.prefix}precos brazil
         const remoteJid = msg.key.remoteJid;
 
         let lista = `
-╔══════════════════════════════════════╗
-║   📱 *SERVIÇOS DISPONÍVEIS*          ║
-╠══════════════════════════════════════╣
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   *SERVICOS DISPONIVEIS*  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 `;
 
         for (const [code, info] of Object.entries(POPULAR_SERVICES)) {
-            lista += `║  ${info.emoji} *${info.name}*\n`;
-            lista += `║  └ Código: ${code}\n║\n`;
+            lista += `${info.emoji} *${info.name}*\n`;
+            lista += `   Codigo: \`${code}\`\n\n`;
         }
 
-        lista += `╚══════════════════════════════════════╝
+        lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📝 *Como usar:*
+*Como usar:*
 ${settings.prefix}comprar whatsapp russia
-└ whatsapp = serviço, russia = país
-
 ${settings.prefix}comprar telegram brazil
-└ telegram = serviço, brazil = Brasil
 `;
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -132,62 +129,79 @@ ${settings.prefix}comprar telegram brazil
 
         if (!countryInfo) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ País "${country}" não encontrado!\n\nUse ${settings.prefix}paises para ver a lista.`
+                text: `Pais "${country}" nao encontrado!\n\nUse ${settings.prefix}paises para ver a lista.`
             });
             return;
         }
 
         await sock.sendMessage(remoteJid, {
-            text: `⏳ Buscando preços para ${countryInfo.emoji} ${countryInfo.name}...`
+            text: `Buscando precos para ${countryInfo.emoji} ${countryInfo.name}...`
         });
 
         try {
             const countryPrices = await smsService.getCountryPrices(country);
             
-            let lista = `
-╔══════════════════════════════════════╗
-║  ${countryInfo.emoji} *PREÇOS - ${countryInfo.name.toUpperCase()}*
-╠══════════════════════════════════════╣
-`;
-
-            let found = 0;
+            const priceList = [];
             
             for (const [serviceCode, serviceInfo] of Object.entries(POPULAR_SERVICES)) {
                 if (countryPrices[serviceCode]) {
                     const priceInfo = countryPrices[serviceCode];
                     const brlPrice = convertRubToBrl(priceInfo.priceRub);
-                    
-                    lista += `║  ${serviceInfo.emoji} *${serviceInfo.name}*\n`;
-                    lista += `║  └ ${formatMoney(brlPrice)} (${priceInfo.count} disponíveis)\n║\n`;
-                    found++;
+                    priceList.push({
+                        code: serviceCode,
+                        name: serviceInfo.name,
+                        emoji: serviceInfo.emoji,
+                        price: brlPrice,
+                        count: priceInfo.count
+                    });
                 }
             }
 
-            if (found === 0) {
-                lista += `║  ⚠️ Nenhum serviço disponível\n║\n`;
+            priceList.sort((a, b) => a.price - b.price);
+
+            let lista = `
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ${countryInfo.emoji} *${countryInfo.name.toUpperCase()}*
+┃  Ordenado por preco       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+`;
+
+            if (priceList.length === 0) {
+                lista += `Nenhum servico disponivel\n\n`;
                 
-                const otherServices = Object.keys(countryPrices).slice(0, 5);
-                if (otherServices.length > 0) {
-                    lista += `║  Outros serviços:\n`;
-                    for (const svc of otherServices) {
-                        const priceInfo = countryPrices[svc];
-                        const brlPrice = convertRubToBrl(priceInfo.priceRub);
-                        lista += `║  • ${svc}: ${formatMoney(brlPrice)}\n`;
+                const otherPrices = [];
+                for (const [svc, priceInfo] of Object.entries(countryPrices)) {
+                    const brlPrice = convertRubToBrl(priceInfo.priceRub);
+                    otherPrices.push({ code: svc, price: brlPrice, count: priceInfo.count });
+                }
+                otherPrices.sort((a, b) => a.price - b.price);
+                
+                if (otherPrices.length > 0) {
+                    lista += `*Outros servicos:*\n`;
+                    for (const item of otherPrices.slice(0, 10)) {
+                        lista += `  ${item.code}: ${formatMoney(item.price)}\n`;
                     }
                 }
+            } else {
+                for (let i = 0; i < priceList.length; i++) {
+                    const item = priceList[i];
+                    const rank = i + 1;
+                    lista += `*${rank}.* ${item.emoji} ${item.name}\n`;
+                    lista += `   ${formatMoney(item.price)} (${item.count} disp)\n\n`;
+                }
             }
 
-            lista += `╚══════════════════════════════════════╝
-
-📝 *Comprar:* ${settings.prefix}comprar [serviço] ${country}
+            lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
+*Comprar:* ${settings.prefix}comprar [servico] ${country}
 `;
 
             await sock.sendMessage(remoteJid, { text: lista });
 
         } catch (error) {
-            console.error('[SMS] Erro ao buscar preços:', error);
+            console.error('[SMS] Erro ao buscar precos:', error);
             await sock.sendMessage(remoteJid, {
-                text: `❌ Erro ao buscar preços: ${error.message}`
+                text: `Erro ao buscar precos: ${error.message}`
             });
         }
     },
@@ -198,7 +212,7 @@ ${settings.prefix}comprar telegram brazil
 
         if (args.length < 1) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ *Uso correto:*\n${settings.prefix}comprar [serviço] [país]\n\nExemplo: ${settings.prefix}comprar whatsapp russia`
+                text: `*Uso correto:*\n${settings.prefix}comprar [servico] [pais]\n\nExemplo: ${settings.prefix}comprar whatsapp russia`
             });
             return;
         }
@@ -208,7 +222,7 @@ ${settings.prefix}comprar telegram brazil
 
         if (!POPULAR_SERVICES[service]) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ Serviço "${service}" não encontrado!\n\nUse ${settings.prefix}servicos para ver a lista.`
+                text: `Servico "${service}" nao encontrado!\n\nUse ${settings.prefix}servicos para ver a lista.`
             });
             return;
         }
@@ -216,7 +230,7 @@ ${settings.prefix}comprar telegram brazil
         const countryInfo = POPULAR_COUNTRIES[country];
         if (!countryInfo) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ País "${country}" não encontrado!\n\nUse ${settings.prefix}paises para ver a lista.`
+                text: `Pais "${country}" nao encontrado!\n\nUse ${settings.prefix}paises para ver a lista.`
             });
             return;
         }
@@ -224,7 +238,7 @@ ${settings.prefix}comprar telegram brazil
         const serviceInfo = POPULAR_SERVICES[service];
 
         await sock.sendMessage(remoteJid, {
-            text: `⏳ Buscando número ${serviceInfo.emoji} ${serviceInfo.name} em ${countryInfo.emoji} ${countryInfo.name}...`
+            text: `Buscando ${serviceInfo.emoji} ${serviceInfo.name} em ${countryInfo.emoji} ${countryInfo.name}...`
         });
 
         try {
@@ -238,7 +252,7 @@ ${settings.prefix}comprar telegram brazil
             const balance = await wallet.getBalance(senderNumber);
             if (balance < estimatedPrice) {
                 await sock.sendMessage(remoteJid, {
-                    text: `❌ *Saldo insuficiente!*\n\n💰 Seu saldo: ${formatMoney(balance)}\n💵 Preço estimado: ${formatMoney(estimatedPrice)}\n\nPeça ao administrador para adicionar saldo.`
+                    text: `*Saldo insuficiente!*\n\nSeu saldo: ${formatMoney(balance)}\nPreco: ${formatMoney(estimatedPrice)}\n\nPeca ao admin para adicionar saldo.`
                 });
                 return;
             }
@@ -246,15 +260,15 @@ ${settings.prefix}comprar telegram brazil
             const result = await smsService.getNumber(service, country, 'any');
 
             if (!result.success) {
-                let errorMsg = '❌ Erro ao obter número.';
+                let errorMsg = 'Erro ao obter numero.';
                 if (result.error === 'NO_NUMBERS') {
-                    errorMsg = '❌ Nenhum número disponível no momento. Tente outro país.';
+                    errorMsg = 'Nenhum numero disponivel. Tente outro pais.';
                 } else if (result.error === 'NO_BALANCE') {
-                    errorMsg = '❌ Sistema sem saldo. Entre em contato com o administrador.';
+                    errorMsg = 'Sistema sem saldo. Contate o administrador.';
                 } else if (result.error === 'INVALID_PARAMS') {
-                    errorMsg = '❌ Serviço ou país inválido.';
+                    errorMsg = 'Servico ou pais invalido.';
                 } else {
-                    errorMsg = `❌ Erro: ${result.error}`;
+                    errorMsg = `Erro: ${result.error}`;
                 }
                 await sock.sendMessage(remoteJid, { text: errorMsg });
                 return;
@@ -262,22 +276,29 @@ ${settings.prefix}comprar telegram brazil
 
             const actualPrice = result.priceRub ? convertRubToBrl(result.priceRub) : estimatedPrice;
 
-            await wallet.deductBalance(senderNumber, actualPrice, `Número ${service.toUpperCase()} - ${countryInfo.name}`);
+            await wallet.deductBalance(senderNumber, actualPrice, `${service.toUpperCase()} - ${countryInfo.name}`);
             await wallet.saveActivation(senderNumber, result.activationId, result.phoneNumber, service, country, actualPrice);
 
             const successMsg = `
-✅ *NÚMERO OBTIDO COM SUCESSO!*
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   *NUMERO OBTIDO*         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-📱 *Número:* +${result.phoneNumber}
-${serviceInfo.emoji} *Serviço:* ${serviceInfo.name}
-${countryInfo.emoji} *País:* ${countryInfo.name}
-💵 *Custo:* ${formatMoney(actualPrice)}
+*Numero:* +${result.phoneNumber}
 
-⏳ *Aguardando SMS...*
-O código será enviado aqui automaticamente!
+${serviceInfo.emoji} *Servico:* ${serviceInfo.name}
+${countryInfo.emoji} *Pais:* ${countryInfo.name}
+*Custo:* ${formatMoney(actualPrice)}
 
-⚠️ *Tempo limite:* 15 minutos
-Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+*Aguardando SMS...*
+O codigo sera enviado automaticamente!
+
+*Tempo limite:* 15 minutos
+
+Para cancelar e reembolsar:
+${settings.prefix}cancelar ${result.activationId}
 `;
 
             await sock.sendMessage(remoteJid, { text: successMsg });
@@ -287,7 +308,7 @@ Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar
         } catch (error) {
             console.error('[SMS] Erro ao comprar:', error);
             await sock.sendMessage(remoteJid, {
-                text: `❌ Erro ao processar compra: ${error.message}`
+                text: `Erro ao processar compra: ${error.message}`
             });
         }
     },
@@ -298,7 +319,7 @@ Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar
 
         if (!args[0]) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ Use: ${settings.prefix}cancelar [ID da ativação]`
+                text: `Use: ${settings.prefix}cancelar [ID]`
             });
             return;
         }
@@ -317,17 +338,17 @@ Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar
             const activation = activations.find(a => a.activation_id === activationId);
             
             if (activation) {
-                await wallet.refundBalance(senderNumber, parseFloat(activation.cost) * 0.9, 'Reembolso cancelamento');
+                await wallet.refundBalance(senderNumber, parseFloat(activation.cost) * 0.9, 'Reembolso');
                 await wallet.updateActivationStatus(activationId, 'cancelled');
             }
 
             await sock.sendMessage(remoteJid, {
-                text: `✅ Ativação ${activationId} cancelada!\n💰 90% do valor foi reembolsado.`
+                text: `Ativacao ${activationId} cancelada!\n90% do valor foi reembolsado.`
             });
 
         } catch (error) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ Erro ao cancelar: ${error.message}`
+                text: `Erro ao cancelar: ${error.message}`
             });
         }
     },
@@ -341,12 +362,14 @@ Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar
 
         await sock.sendMessage(remoteJid, {
             text: `
-💰 *SEU SALDO*
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃      *SEU SALDO*          ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-💵 Disponível: ${formatMoney(balance)}
-📊 Total gasto: ${formatMoney(user?.total_spent || 0)}
+*Disponivel:* ${formatMoney(balance)}
+*Total gasto:* ${formatMoney(user?.total_spent || 0)}
 
-Peça ao administrador para adicionar saldo!
+Para adicionar saldo, fale com o admin!
 `
         });
     },
@@ -359,23 +382,29 @@ Peça ao administrador para adicionar saldo!
 
         if (activations.length === 0) {
             await sock.sendMessage(remoteJid, {
-                text: `📱 Você não tem números ativos no momento.\n\nUse ${settings.prefix}comprar para obter um número!`
+                text: `Voce nao tem numeros ativos.\n\nUse ${settings.prefix}comprar para obter um!`
             });
             return;
         }
 
-        let lista = `📱 *SEUS NÚMEROS ATIVOS*\n\n`;
+        let lista = `
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   *NUMEROS ATIVOS*        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+`;
 
         for (const act of activations) {
-            const serviceInfo = POPULAR_SERVICES[act.service] || { name: act.service, emoji: '📱' };
+            const serviceInfo = POPULAR_SERVICES[act.service] || { name: act.service, emoji: '' };
             lista += `${serviceInfo.emoji} *${serviceInfo.name}*\n`;
-            lista += `├ Número: +${act.phone_number}\n`;
-            lista += `├ ID: ${act.activation_id}\n`;
-            lista += `├ Status: ${act.status}\n`;
-            lista += `└ Código: ${act.sms_code || 'Aguardando...'}\n\n`;
+            lista += `   Numero: +${act.phone_number}\n`;
+            lista += `   ID: \`${act.activation_id}\`\n`;
+            lista += `   Status: ${act.status}\n`;
+            lista += `   Codigo: ${act.sms_code || 'Aguardando...'}\n\n`;
         }
 
-        lista += `\n📝 Para cancelar: ${settings.prefix}cancelar [ID]`;
+        lista += `━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Para cancelar: ${settings.prefix}cancelar [ID]`;
 
         await sock.sendMessage(remoteJid, { text: lista });
     },
@@ -388,18 +417,24 @@ Peça ao administrador para adicionar saldo!
 
         if (history.length === 0) {
             await sock.sendMessage(remoteJid, {
-                text: `📜 Você ainda não fez nenhuma compra.\n\nUse ${settings.prefix}comprar para começar!`
+                text: `Voce ainda nao fez compras.\n\nUse ${settings.prefix}comprar para comecar!`
             });
             return;
         }
 
-        let lista = `📜 *HISTÓRICO DE COMPRAS*\n\n`;
+        let lista = `
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   *HISTORICO*             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+`;
 
         for (const act of history.slice(0, 10)) {
-            const serviceInfo = POPULAR_SERVICES[act.service] || { name: act.service, emoji: '📱' };
+            const serviceInfo = POPULAR_SERVICES[act.service] || { name: act.service, emoji: '' };
             const date = new Date(act.created_at).toLocaleDateString('pt-BR');
-            lista += `${serviceInfo.emoji} ${serviceInfo.name} - ${date}\n`;
-            lista += `└ ${act.status === 'completed' ? '✅' : act.status === 'cancelled' ? '❌' : '⏳'} ${formatMoney(act.cost)}\n\n`;
+            const statusIcon = act.status === 'completed' ? '[OK]' : act.status === 'cancelled' ? '[X]' : '[...]';
+            lista += `${serviceInfo.emoji} ${serviceInfo.name}\n`;
+            lista += `   ${date} ${statusIcon} ${formatMoney(act.cost)}\n\n`;
         }
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -411,14 +446,14 @@ Peça ao administrador para adicionar saldo!
 
         if (!isOwner) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ Apenas o dono pode usar este comando!`
+                text: `Apenas o dono pode usar este comando!`
             });
             return;
         }
 
         if (args.length < 2) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ Uso: ${settings.prefix}addsaldo [número] [valor]\n\nExemplo: ${settings.prefix}addsaldo 5511999999999 50`
+                text: `Uso: ${settings.prefix}addsaldo [numero] [valor]\n\nEx: ${settings.prefix}addsaldo 5511999999999 50`
             });
             return;
         }
@@ -427,15 +462,15 @@ Peça ao administrador para adicionar saldo!
         const amount = parseFloat(args[1]);
 
         if (isNaN(amount) || amount <= 0) {
-            await sock.sendMessage(remoteJid, { text: `❌ Valor inválido!` });
+            await sock.sendMessage(remoteJid, { text: `Valor invalido!` });
             return;
         }
 
-        await wallet.addBalance(targetNumber, amount, 'Crédito manual');
+        await wallet.addBalance(targetNumber, amount, 'Credito manual');
         const newBalance = await wallet.getBalance(targetNumber);
 
         await sock.sendMessage(remoteJid, {
-            text: `✅ *Saldo adicionado!*\n\n👤 Usuário: ${targetNumber}\n💵 Adicionado: ${formatMoney(amount)}\n💰 Novo saldo: ${formatMoney(newBalance)}`
+            text: `*Saldo adicionado!*\n\nUsuario: ${targetNumber}\nAdicionado: ${formatMoney(amount)}\nNovo saldo: ${formatMoney(newBalance)}`
         });
     },
 
@@ -444,7 +479,7 @@ Peça ao administrador para adicionar saldo!
         const remoteJid = msg.key.remoteJid;
 
         if (!isOwner) {
-            await sock.sendMessage(remoteJid, { text: `❌ Apenas o dono!` });
+            await sock.sendMessage(remoteJid, { text: `Apenas o dono!` });
             return;
         }
 
@@ -452,11 +487,11 @@ Peça ao administrador para adicionar saldo!
             const balance = await smsService.getBalance();
             const rubToBrl = balance * RUB_TO_BRL;
             await sock.sendMessage(remoteJid, {
-                text: `💳 *Saldo API 5sim.net:* ₽${balance.toFixed(2)} RUB\n\n💵 Em reais: ${formatMoney(rubToBrl)}`
+                text: `*Saldo API 5sim.net*\n\n${balance.toFixed(2)} RUB\n${formatMoney(rubToBrl)}`
             });
         } catch (error) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ Erro ao consultar API: ${error.message}`
+                text: `Erro ao consultar API: ${error.message}`
             });
         }
     }
@@ -475,7 +510,7 @@ async function pollForSMS(sock, remoteJid, senderNumber, activationId, serviceIn
             
             await wallet.updateActivationStatus(activationId, 'timeout');
             await sock.sendMessage(remoteJid, {
-                text: `⏰ *Tempo esgotado!*\n\nNenhum SMS recebido para ativação ${activationId}.\nO número expirou.`
+                text: `*Tempo esgotado!*\n\nNenhum SMS recebido para ${activationId}.\nO numero expirou.`
             });
             return;
         }
@@ -494,12 +529,15 @@ async function pollForSMS(sock, remoteJid, senderNumber, activationId, serviceIn
 
                 await sock.sendMessage(remoteJid, {
                     text: `
-🎉 *CÓDIGO SMS RECEBIDO!*
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   *CODIGO RECEBIDO*       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-${serviceInfo.emoji} *Serviço:* ${serviceInfo.name}
-🔢 *Código:* ${code}
+${serviceInfo.emoji} *Servico:* ${serviceInfo.name}
 
-✅ Ativação concluída com sucesso!
+*CODIGO:* ${code}
+
+Ativacao concluida!
 `
                 });
             } else if (status.status === 'CANCELLED' || status.status === 'TIMEOUT') {

@@ -34,5 +34,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "unzipper": "^0.12.3"
   }
 }
