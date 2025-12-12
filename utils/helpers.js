@@ -15,7 +15,17 @@ const helpers = {
     
     extractNumber: (jid) => {
         if (!jid) return null;
-        return jid.replace('@s.whatsapp.net', '').replace('@g.us', '');
+        let number = jid;
+        if (number.includes(':')) {
+            number = number.split(':')[0];
+        }
+        number = number
+            .replace('@s.whatsapp.net', '')
+            .replace('@g.us', '')
+            .replace('@lid', '')
+            .replace('lid', '');
+        const digits = number.replace(/\D/g, '');
+        return digits || number;
     },
     
     isGroup: (jid) => {

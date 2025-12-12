@@ -1,13 +1,21 @@
-const { SMSActivateService, POPULAR_SERVICES, POPULAR_COUNTRIES } = require('../services/smsActivate');
+const { FiveSimService, POPULAR_SERVICES, POPULAR_COUNTRIES } = require('../services/fivesim');
 const wallet = require('../storage/userWallet');
 const settings = require('../config/settings');
 
-const smsService = new SMSActivateService(process.env.SMS_ACTIVATE_API_KEY);
+const smsService = new FiveSimService(process.env.FIVESIM_API_KEY);
 
 const activePolling = new Map();
 
+const RUB_TO_BRL = 0.065;
+const PROFIT_MARGIN = 2.0;
+
 const formatMoney = (value) => {
     return `R$ ${parseFloat(value).toFixed(2)}`;
+};
+
+const convertRubToBrl = (rubPrice) => {
+    const brlPrice = rubPrice * RUB_TO_BRL * PROFIT_MARGIN;
+    return Math.max(Math.ceil(brlPrice * 100) / 100, 0.50);
 };
 
 const smsCommands = {
@@ -34,9 +42,13 @@ const smsCommands = {
 ║  ${settings.prefix}servicos                     ║
 ║  └ Ver serviços (WhatsApp, etc)      ║
 ║                                      ║
+║  ${settings.prefix}precos [país]                ║
+║  └ Ver preços do país                ║
+║  └ Ex: ${settings.prefix}precos russia          ║
+║                                      ║
 ║  ${settings.prefix}comprar [serviço] [país]     ║
 ║  └ Comprar número virtual            ║
-║  └ Ex: ${settings.prefix}comprar wa 0            ║
+║  └ Ex: ${settings.prefix}comprar whatsapp russia║
 ║                                      ║
 ║  ${settings.prefix}meusnumeros                  ║
 ║  └ Ver números ativos                ║
@@ -46,9 +58,6 @@ const smsCommands = {
 ║                                      ║
 ║  ${settings.prefix}historico                    ║
 ║  └ Histórico de compras              ║
-║                                      ║
-║  ${settings.prefix}addsaldo [valor]             ║
-║  └ Adicionar saldo (admin)           ║
 ║                                      ║
 ╚══════════════════════════════════════╝
 
@@ -76,11 +85,11 @@ const smsCommands = {
         lista += `╚══════════════════════════════════════╝
 
 📝 *Como usar:*
-${settings.prefix}comprar wa 0
+${settings.prefix}comprar whatsapp russia
 └ Compra número da Rússia para WhatsApp
 
-${settings.prefix}comprar tg 73
-└ Compra número do Brasil para Telegram
+${settings.prefix}precos brazil
+└ Ver preços do Brasil
 `;
 
         await sock.sendMessage(remoteJid, { text: lista });
@@ -104,14 +113,83 @@ ${settings.prefix}comprar tg 73
         lista += `╚══════════════════════════════════════╝
 
 📝 *Como usar:*
-${settings.prefix}comprar wa 0
-└ wa = WhatsApp, 0 = Rússia
+${settings.prefix}comprar whatsapp russia
+└ whatsapp = serviço, russia = país
 
-${settings.prefix}comprar tg 6
-└ tg = Telegram, 6 = Indonésia
+${settings.prefix}comprar telegram brazil
+└ telegram = serviço, brazil = Brasil
 `;
 
         await sock.sendMessage(remoteJid, { text: lista });
+    },
+
+    async precos(ctx) {
+        const { sock, msg, args } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        const country = args[0]?.toLowerCase() || 'russia';
+        const countryInfo = POPULAR_COUNTRIES[country];
+
+        if (!countryInfo) {
+            await sock.sendMessage(remoteJid, {
+                text: `❌ País "${country}" não encontrado!\n\nUse ${settings.prefix}paises para ver a lista.`
+            });
+            return;
+        }
+
+        await sock.sendMessage(remoteJid, {
+            text: `⏳ Buscando preços para ${countryInfo.emoji} ${countryInfo.name}...`
+        });
+
+        try {
+            const countryPrices = await smsService.getCountryPrices(country);
+            
+            let lista = `
+╔══════════════════════════════════════╗
+║  ${countryInfo.emoji} *PREÇOS - ${countryInfo.name.toUpperCase()}*
+╠══════════════════════════════════════╣
+`;
+
+            let found = 0;
+            
+            for (const [serviceCode, serviceInfo] of Object.entries(POPULAR_SERVICES)) {
+                if (countryPrices[serviceCode]) {
+                    const priceInfo = countryPrices[serviceCode];
+                    const brlPrice = convertRubToBrl(priceInfo.priceRub);
+                    
+                    lista += `║  ${serviceInfo.emoji} *${serviceInfo.name}*\n`;
+                    lista += `║  └ ${formatMoney(brlPrice)} (${priceInfo.count} disponíveis)\n║\n`;
+                    found++;
+                }
+            }
+
+            if (found === 0) {
+                lista += `║  ⚠️ Nenhum serviço disponível\n║\n`;
+                
+                const otherServices = Object.keys(countryPrices).slice(0, 5);
+                if (otherServices.length > 0) {
+                    lista += `║  Outros serviços:\n`;
+                    for (const svc of otherServices) {
+                        const priceInfo = countryPrices[svc];
+                        const brlPrice = convertRubToBrl(priceInfo.priceRub);
+                        lista += `║  • ${svc}: ${formatMoney(brlPrice)}\n`;
+                    }
+                }
+            }
+
+            lista += `╚══════════════════════════════════════╝
+
+📝 *Comprar:* ${settings.prefix}comprar [serviço] ${country}
+`;
+
+            await sock.sendMessage(remoteJid, { text: lista });
+
+        } catch (error) {
+            console.error('[SMS] Erro ao buscar preços:', error);
+            await sock.sendMessage(remoteJid, {
+                text: `❌ Erro ao buscar preços: ${error.message}`
+            });
+        }
     },
 
     async comprar(ctx) {
@@ -120,13 +198,13 @@ ${settings.prefix}comprar tg 6
 
         if (args.length < 1) {
             await sock.sendMessage(remoteJid, {
-                text: `❌ *Uso correto:*\n${settings.prefix}comprar [serviço] [país]\n\nExemplo: ${settings.prefix}comprar wa 0`
+                text: `❌ *Uso correto:*\n${settings.prefix}comprar [serviço] [país]\n\nExemplo: ${settings.prefix}comprar whatsapp russia`
             });
             return;
         }
 
         const service = args[0].toLowerCase();
-        const country = parseInt(args[1]) || 0;
+        const country = args[1]?.toLowerCase() || 'russia';
 
         if (!POPULAR_SERVICES[service]) {
             await sock.sendMessage(remoteJid, {
@@ -135,32 +213,37 @@ ${settings.prefix}comprar tg 6
             return;
         }
 
+        const countryInfo = POPULAR_COUNTRIES[country];
+        if (!countryInfo) {
+            await sock.sendMessage(remoteJid, {
+                text: `❌ País "${country}" não encontrado!\n\nUse ${settings.prefix}paises para ver a lista.`
+            });
+            return;
+        }
+
         const serviceInfo = POPULAR_SERVICES[service];
-        const countryInfo = POPULAR_COUNTRIES[country] || { name: `País ${country}`, emoji: '🌍' };
 
         await sock.sendMessage(remoteJid, {
             text: `⏳ Buscando número ${serviceInfo.emoji} ${serviceInfo.name} em ${countryInfo.emoji} ${countryInfo.name}...`
         });
 
         try {
-            const prices = await smsService.getPrices(country, service);
-            let price = 15.00;
+            const priceInfo = await smsService.getProductPrice(country, service);
+            let estimatedPrice = 5.00;
             
-            if (prices && prices[service] && prices[service][country]) {
-                price = parseFloat(prices[service][country].cost) || 15.00;
+            if (priceInfo && priceInfo.priceRub) {
+                estimatedPrice = convertRubToBrl(priceInfo.priceRub);
             }
 
-            price = price * 1.3;
-
             const balance = await wallet.getBalance(senderNumber);
-            if (balance < price) {
+            if (balance < estimatedPrice) {
                 await sock.sendMessage(remoteJid, {
-                    text: `❌ *Saldo insuficiente!*\n\n💰 Seu saldo: ${formatMoney(balance)}\n💵 Preço: ${formatMoney(price)}\n\nUse ${settings.prefix}pix para adicionar saldo.`
+                    text: `❌ *Saldo insuficiente!*\n\n💰 Seu saldo: ${formatMoney(balance)}\n💵 Preço estimado: ${formatMoney(estimatedPrice)}\n\nPeça ao administrador para adicionar saldo.`
                 });
                 return;
             }
 
-            const result = await smsService.getNumber(service, country);
+            const result = await smsService.getNumber(service, country, 'any');
 
             if (!result.success) {
                 let errorMsg = '❌ Erro ao obter número.';
@@ -168,15 +251,19 @@ ${settings.prefix}comprar tg 6
                     errorMsg = '❌ Nenhum número disponível no momento. Tente outro país.';
                 } else if (result.error === 'NO_BALANCE') {
                     errorMsg = '❌ Sistema sem saldo. Entre em contato com o administrador.';
+                } else if (result.error === 'INVALID_PARAMS') {
+                    errorMsg = '❌ Serviço ou país inválido.';
+                } else {
+                    errorMsg = `❌ Erro: ${result.error}`;
                 }
                 await sock.sendMessage(remoteJid, { text: errorMsg });
                 return;
             }
 
-            await wallet.deductBalance(senderNumber, price, `Número ${service.toUpperCase()} - ${countryInfo.name}`);
-            await wallet.saveActivation(senderNumber, result.activationId, result.phoneNumber, service, country, price);
-            
-            await smsService.markReady(result.activationId);
+            const actualPrice = result.priceRub ? convertRubToBrl(result.priceRub) : estimatedPrice;
+
+            await wallet.deductBalance(senderNumber, actualPrice, `Número ${service.toUpperCase()} - ${countryInfo.name}`);
+            await wallet.saveActivation(senderNumber, result.activationId, result.phoneNumber, service, country, actualPrice);
 
             const successMsg = `
 ✅ *NÚMERO OBTIDO COM SUCESSO!*
@@ -184,12 +271,12 @@ ${settings.prefix}comprar tg 6
 📱 *Número:* +${result.phoneNumber}
 ${serviceInfo.emoji} *Serviço:* ${serviceInfo.name}
 ${countryInfo.emoji} *País:* ${countryInfo.name}
-💵 *Custo:* ${formatMoney(price)}
+💵 *Custo:* ${formatMoney(actualPrice)}
 
 ⏳ *Aguardando SMS...*
 O código será enviado aqui automaticamente!
 
-⚠️ *Tempo limite:* 20 minutos
+⚠️ *Tempo limite:* 15 minutos
 Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar.
 `;
 
@@ -259,7 +346,7 @@ Use ${settings.prefix}cancelar ${result.activationId} para cancelar e reembolsar
 💵 Disponível: ${formatMoney(balance)}
 📊 Total gasto: ${formatMoney(user?.total_spent || 0)}
 
-Use ${settings.prefix}pix para adicionar mais saldo!
+Peça ao administrador para adicionar saldo!
 `
         });
     },
@@ -363,8 +450,9 @@ Use ${settings.prefix}pix para adicionar mais saldo!
 
         try {
             const balance = await smsService.getBalance();
+            const rubToBrl = balance * RUB_TO_BRL;
             await sock.sendMessage(remoteJid, {
-                text: `💳 *Saldo API SMS-Activate:* ${formatMoney(balance)}`
+                text: `💳 *Saldo API 5sim.net:* ₽${balance.toFixed(2)} RUB\n\n💵 Em reais: ${formatMoney(rubToBrl)}`
             });
         } catch (error) {
             await sock.sendMessage(remoteJid, {
@@ -376,7 +464,7 @@ Use ${settings.prefix}pix para adicionar mais saldo!
 
 async function pollForSMS(sock, remoteJid, senderNumber, activationId, serviceInfo) {
     let attempts = 0;
-    const maxAttempts = 120;
+    const maxAttempts = 90;
 
     const interval = setInterval(async () => {
         attempts++;
@@ -395,14 +483,14 @@ async function pollForSMS(sock, remoteJid, senderNumber, activationId, serviceIn
         try {
             const status = await smsService.getStatus(activationId);
 
-            if (status.status === 'CODE_RECEIVED' || status.status === 'FULL_SMS') {
+            if (status.status === 'CODE_RECEIVED') {
                 clearInterval(interval);
                 activePolling.delete(activationId);
 
                 const code = status.code || status.message;
                 
                 await wallet.updateActivationStatus(activationId, 'completed', code);
-                await smsService.markComplete(activationId);
+                await smsService.finishActivation(activationId);
 
                 await sock.sendMessage(remoteJid, {
                     text: `
@@ -414,7 +502,7 @@ ${serviceInfo.emoji} *Serviço:* ${serviceInfo.name}
 ✅ Ativação concluída com sucesso!
 `
                 });
-            } else if (status.status === 'CANCELLED') {
+            } else if (status.status === 'CANCELLED' || status.status === 'TIMEOUT') {
                 clearInterval(interval);
                 activePolling.delete(activationId);
                 await wallet.updateActivationStatus(activationId, 'cancelled');
