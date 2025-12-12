@@ -53,5 +53,16 @@
     "welcomeMsg": null,
     "goodbyeMsg": null,
     "rules": null
+  },
+  "120363044784224641@g.us": {
+    "welcome": true,
+    "goodbye": true,
+    "antiLink": false,
+    "antiFlood": false,
+    "antiBadWords": false,
+    "muted": false,
+    "welcomeMsg": null,
+    "goodbyeMsg": null,
+    "rules": null
   }
 }
