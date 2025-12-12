@@ -85,7 +85,36 @@ O bot está configurado para deploy em:
 - Railway
 - Render
 
+## Sistema SMS Virtual
+
+### Provedor
+- **5sim.net** - Preços em rublos (RUB)
+- Taxa de conversão: RUB × 0.065 × 2.0 = preço final em BRL
+- Margem de lucro: 100%
+
+### Comandos SMS
+- `!sms` - Menu principal do sistema SMS
+- `!paises` - Lista países disponíveis
+- `!servicos` - Lista serviços (WhatsApp, Telegram, etc)
+- `!precos [país]` - Ver preços do país
+- `!comprar [serviço] [país]` - Comprar número virtual
+- `!meusnumeros` - Ver números ativos
+- `!saldo` - Ver saldo da carteira
+- `!historico` - Histórico de compras
+- `!cancelar [ID]` - Cancelar e reembolsar
+
+### Comandos Dono (SMS)
+- `!addsaldo [número] [valor]` - Adicionar saldo ao usuário
+- `!saldoapi` - Ver saldo da conta 5sim
+
 ## Mudanças Recentes
+
+- **Dezembro 2024**: Sistema SMS Virtual com 5sim.net
+  - Integração com API 5sim.net
+  - Sistema de carteira virtual por usuário
+  - Conversão RUB → BRL com margem 100%
+  - Correção do bug @lid nas menções
+  - Polling automático para receber códigos SMS
 
 - **Dezembro 2024**: Criação inicial do bot
   - Sistema completo de menus
