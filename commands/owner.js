@@ -377,6 +377,46 @@ const commands = {
         });
         
         process.exit(0);
+    },
+    
+    bangp: async (ctx) => {
+        const { sock, msg, isOwner, isGroup, groupId } = ctx;
+        
+        if (!isOwner) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notOwner });
+        if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: '❌ Use apenas em grupos!' });
+        
+        db.setGroup(groupId, 'botDisabled', true);
+        
+        await sock.sendMessage(msg.key.remoteJid, {
+            text: `╔♡━━━━━━━━━━━━━━━━━━━━━━♡╗
+║  🇨🇦 *ALIANCA BRATVA* 🇨🇦  ║
+╚♡━━━━━━━━━━━━━━━━━━━━━━♡╝
+
+🔴 *BOT DESATIVADO*
+
+O bot não responderá mais comandos neste grupo.
+
+Use *!unbangp* para reativar.`
+        });
+    },
+    
+    unbangp: async (ctx) => {
+        const { sock, msg, isOwner, isGroup, groupId } = ctx;
+        
+        if (!isOwner) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notOwner });
+        if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: '❌ Use apenas em grupos!' });
+        
+        db.setGroup(groupId, 'botDisabled', false);
+        
+        await sock.sendMessage(msg.key.remoteJid, {
+            text: `╔♡━━━━━━━━━━━━━━━━━━━━━━♡╗
+║  🇨🇦 *ALIANCA BRATVA* 🇨🇦  ║
+╚♡━━━━━━━━━━━━━━━━━━━━━━♡╝
+
+🟢 *BOT ATIVADO*
+
+O bot voltou a responder comandos neste grupo!`
+        });
     }
 };
 

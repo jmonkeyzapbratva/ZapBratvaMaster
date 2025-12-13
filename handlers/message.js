@@ -149,6 +149,14 @@ const handleMessage = async (sock, msg) => {
         
         if (!command) return;
         
+        // Verifica se o bot está desativado no grupo (exceto comandos bangp/unbangp)
+        if (isGroup) {
+            const groupSettings = db.getGroup(groupId);
+            if (groupSettings.botDisabled && !['bangp', 'unbangp'].includes(command)) {
+                return; // Bot desativado, ignora comandos
+            }
+        }
+        
         // Verifica se é o dono (por número OU por LID)
         const senderClean = senderNumber.replace(/\D/g, '');
         const ownerClean = settings.ownerNumber.replace(/\D/g, '');

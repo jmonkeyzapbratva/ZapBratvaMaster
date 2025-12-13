@@ -59,7 +59,8 @@ const db = {
                 muted: false,
                 welcomeMsg: null,
                 goodbyeMsg: null,
-                rules: null
+                rules: null,
+                botDisabled: false
             };
             saveData('groups', groups);
         }
