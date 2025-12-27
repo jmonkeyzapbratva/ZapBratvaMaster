@@ -2,7 +2,7 @@
 # Documentação: https://fly.io/docs/reference/configuration/
 
 app = "zapbratvamaster"
-primary_region = "gru"  # São Paulo, Brasil
+primary_region = "iad"  # São Paulo, Brasil
 
 [build]
   builder = "heroku/buildpacks:20"
