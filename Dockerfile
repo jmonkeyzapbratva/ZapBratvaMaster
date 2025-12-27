@@ -9,6 +9,7 @@ RUN apk add --no-cache \
     python3 \
     make \
     g++ \
+    git \
     && rm -rf /var/cache/apk/*
 
 # Criar diretório de trabalho
