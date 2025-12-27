@@ -18,6 +18,9 @@ let currentQR = null;
 let botConnected = false;
 
 const app = express();
+// Inicia servidores de ping
+startPingServer();
+setTimeout(startAutoPing, 10000); // Inicia após 10 segundos
 const PORT = process.env.PORT || 5000;
 
 let sock = null;
