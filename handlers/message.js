@@ -1,4 +1,4 @@
-const settings = require('../config/settings');
+ const settings = require('../config/settings');
 const messages = require('../config/messages');
 const logger = require('../utils/logger');
 const helpers = require('../utils/helpers');
@@ -20,6 +20,16 @@ const economiaCommands = require('../commands/economia');
 
 const floodControl = new Map();
 
+// FUNÇÕES DE DELAY (COMPORTAMENTO HUMANO)
+const humanDelay = async (min = 500, max = 2500) => {
+    const delay = Math.random() * (max - min) + min;
+    return new Promise(resolve => setTimeout(resolve, delay));
+};
+
+const shortDelay = async () => {
+    return new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 700));
+};
+
 const handleMessage = async (sock, msg) => {
     try {
         if (!msg.message) return;
@@ -33,10 +43,8 @@ const handleMessage = async (sock, msg) => {
         
         // Se o sender é LID, tenta obter o número real
         if (sender && sender.includes('@lid')) {
-            // Tenta obter do pushName ou verifiedBizName
             const pushName = msg.pushName || '';
             
-            // Em grupos, busca o número real dos participantes
             if (isGroup) {
                 try {
                     const groupMeta = await sock.groupMetadata(groupId);
@@ -47,11 +55,8 @@ const handleMessage = async (sock, msg) => {
                 } catch (e) {}
             }
             
-            // Se ainda é LID, tenta usar o número do próprio bot se for o dono conectado
             if (senderNumber.includes('lid') || senderNumber.includes('@')) {
-                // Verifica se o pushName corresponde ao nome do dono
                 const botNumber = sock.user?.id?.split(':')[0] || '';
-                // Se o bot e o dono são o mesmo número (você está testando consigo mesmo)
                 if (botNumber === settings.ownerNumber.replace(/^55/, '').replace(/^0/, '') ||
                     botNumber === settings.ownerNumber ||
                     settings.ownerNumber.includes(botNumber)) {
@@ -97,6 +102,7 @@ const handleMessage = async (sock, msg) => {
                         await sock.sendMessage(groupId, { 
                             text: '🔗 *ANTI-LINK ATIVADO*\n\n❌ Links não são permitidos neste grupo!' 
                         });
+                        await shortDelay();
                         await sock.sendMessage(groupId, { delete: msg.key });
                         return;
                     }
@@ -136,6 +142,7 @@ const handleMessage = async (sock, msg) => {
                     await sock.sendMessage(groupId, { 
                         text: '🚫 *FILTRO DE PALAVRAS*\n\n❌ Essa palavra não é permitida!' 
                     });
+                    await shortDelay();
                     await sock.sendMessage(groupId, { delete: msg.key });
                     return;
                 }
@@ -149,23 +156,21 @@ const handleMessage = async (sock, msg) => {
         
         if (!command) return;
         
-        // Verifica se o bot está desativado no grupo (exceto comandos bangp/unbangp)
         if (isGroup) {
             const groupSettings = db.getGroup(groupId);
             if (groupSettings.botDisabled && !['bangp', 'unbangp'].includes(command)) {
-                return; // Bot desativado, ignora comandos
+                return;
             }
         }
         
-        // Verifica se é o dono (por número OU por LID)
         const senderClean = senderNumber.replace(/\D/g, '');
         const ownerClean = settings.ownerNumber.replace(/\D/g, '');
         const ownerLID = settings.ownerLID || '';
         
         const isOwner = senderClean === ownerClean || 
                         senderNumber === settings.ownerNumber ||
-                        senderClean === ownerLID || // Verifica pelo LID
-                        senderNumber.includes(ownerLID); // Inclui o LID
+                        senderClean === ownerLID ||
+                        senderNumber.includes(ownerLID);
         
         const isBotAdmin = db.isBotAdmin(senderNumber) || isOwner;
         
@@ -206,7 +211,7 @@ const handleMessage = async (sock, msg) => {
             mentions: mentionedJids
         };
         
-        const groupName = isGroup ? groupMetadata.subject : 'Privado';
+        const groupName = isGroup ? groupMetadata?.subject : 'Privado';
         logger.command(senderNumber, `${settings.prefix}${command}`, groupName);
         db.incrementStat('commandsUsed');
         
@@ -235,8 +240,12 @@ const handleMessage = async (sock, msg) => {
         };
         
         if (allCommands[command]) {
+            // DELAY ANTES DE EXECUTAR COMANDO (COMPORTAMENTO HUMANO)
+            await humanDelay();
             await allCommands[command](context);
         } else {
+            // DELAY ANTES DE RESPONDER ERRO
+            await humanDelay(800, 2000);
             await sock.sendMessage(msg.key.remoteJid, {
                 text: `❌ Comando *${settings.prefix}${command}* não encontrado!\n\nUse *${settings.prefix}menu* para ver os comandos disponíveis.`
             });
