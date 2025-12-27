@@ -345,6 +345,46 @@ process.on('unhandledRejection', (reason, promise) => {
     logger.error(`Promise rejeitada: ${reason}`);
 });
 
+// ==================== 🚀 AUTO-PING PARA RENDER ====================
+const startAutoPing = () => {
+    console.log('✅ Auto-ping iniciado (mantém Render acordado)');
+    
+    setInterval(async () => {
+        try {
+            const response = await fetch(`http://localhost:${PORT}/health`);
+            console.log(`🔄 Auto-ping realizado: ${response.status} - ${new Date().toLocaleTimeString()}`);
+        } catch (error) {
+            // Tenta pingar a si mesmo
+            try {
+                const app = express();
+                const tempServer = app.listen(0); // Porta aleatória
+                tempServer.close();
+                console.log('🔄 Fallback ping interno');
+            } catch (err) {
+                console.log('⚠️ Auto-ping falhou, tentando reiniciar...');
+            }
+        }
+    }, 5 * 60 * 1000); // A cada 5 minutos (menos que 15!)
+};
+
+// ==================== 🚀 SERVIDOR DE PING EXTERNO ====================
+const startPingServer = () => {
+    const pingApp = express();
+    const PING_PORT = 8080;
+    
+    pingApp.get('/ping', (req, res) => {
+        res.json({ 
+            status: 'alive', 
+            timestamp: new Date().toISOString(),
+            bot: 'BRATVA BOT'
+        });
+    });
+    
+    pingApp.listen(PING_PORT, '0.0.0.0', () => {
+        console.log(`📡 Servidor de ping na porta ${PING_PORT}`);
+    });
+};
+
 startBot().catch((err) => {
     logger.error(`Erro ao iniciar bot: ${err.message}`);
     console.error(err);
