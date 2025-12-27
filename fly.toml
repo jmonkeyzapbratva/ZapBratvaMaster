@@ -1,7 +1,7 @@
 # Configuração para deploy no Fly.io
 # Documentação: https://fly.io/docs/reference/configuration/
 
-app = "bratva-bot-whatsapp"
+app = "zapbratvamaster"
 primary_region = "gru"  # São Paulo, Brasil
 
 [build]
