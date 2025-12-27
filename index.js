@@ -40,22 +40,28 @@ const startBot = async () => {
     version,
     auth: {
         creds: state.creds,
-        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' })) // Silencia mais
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }))
     },
-    printQRInTerminal: true,
-    logger: pino({ level: 'fatal' }), // Reduz logs desnecessários
-    browser: ['Ubuntu', 'Chrome', '120.0.0.0'],
+    // 🌟 CONFIGURAÇÃO CRÍTICA:
+    printQRInTerminal: false,  // Não mostra QR no terminal (reduz logs)
+    logger: pino({ level: 'fatal' }),  // Quase nenhum log
+    browser: ['Windows', 'Chrome', '121.0.0.0'],  // Windows comum
     connectTimeoutMs: 60000,
-    defaultQueryTimeoutMs: 60000, // Aumenta timeout geral
-    keepAliveIntervalMs: 10000,   // Mantém conexão ativa
-    emitOwnEvents: true,
-    fireInitQueries: true,
-    generateHighQualityLinkPreview: false, // Desliga para economizar
+    defaultQueryTimeoutMs: 0,
+    keepAliveIntervalMs: 25000,  // Mais espaçado
+    emitOwnEvents: false,
+    fireInitQueries: false,  // NÃO faz consultas iniciais pesadas
+    generateHighQualityLinkPreview: false,
     syncFullHistory: false,
-    markOnlineOnConnect: false,   // IMPORTANTE: Não mostra "online" o tempo todo
-    retryRequestDelayMs: 2000,    // Adiciona: delay entre tentativas
-    maxRetries: 10,               // Adiciona: número de tentativas
-    mobile: false,                // Adiciona: modo não-mobile
+    markOnlineOnConnect: false,  // NUNCA mostra como "online"
+    mobile: false,  // Modo desktop normal
+    downloadHistory: false,  // Não baixa histórico
+    transactionOpts: { maxCommitRetries: 1 },  // Menos tentativas
+    // 🌟 NOVOS (versão mais recente do Baileys):
+    async fetchLatestMessage() { return null; },
+    async fetchMessagesFromWA() { return []; },
+    shouldSyncHistoryMessage() { return false; },
+    linkPreviewImageThumbnailWidth: 64,  // Miniatura pequena
 });
     
     sock.ev.on('connection.update', async (update) => {
