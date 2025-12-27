@@ -36,23 +36,27 @@ const startBot = async () => {
     logger.info(`WhatsApp Web Version: ${version.join('.')}`);
     
     sock = makeWASocket({
-        version,
-        auth: {
-            creds: state.creds,
-            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
-        },
-        printQRInTerminal: true,
-        logger: pino({ level: 'silent' }),
-        browser: ['BRATVA BOT', 'Chrome', '120.0.0'],
-        connectTimeoutMs: 60000,
-        defaultQueryTimeoutMs: 0,
-        keepAliveIntervalMs: 10000,
-        emitOwnEvents: false,
-        fireInitQueries: true,
-        generateHighQualityLinkPreview: true,
-        syncFullHistory: false,
-        markOnlineOnConnect: true
-    });
+    sock = makeWASocket({
+    version,
+    auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' })) // Silencia mais
+    },
+    printQRInTerminal: true,
+    logger: pino({ level: 'fatal' }), // Reduz logs desnecessários
+    browser: ['Ubuntu', 'Chrome', '120.0.0.0'],
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 60000, // Aumenta timeout geral
+    keepAliveIntervalMs: 10000,   // Mantém conexão ativa
+    emitOwnEvents: true,
+    fireInitQueries: true,
+    generateHighQualityLinkPreview: false, // Desliga para economizar
+    syncFullHistory: false,
+    markOnlineOnConnect: false,   // IMPORTANTE: Não mostra "online" o tempo todo
+    retryRequestDelayMs: 2000,    // Adiciona: delay entre tentativas
+    maxRetries: 10,               // Adiciona: número de tentativas
+    mobile: false,                // Adiciona: modo não-mobile
+});
     
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
