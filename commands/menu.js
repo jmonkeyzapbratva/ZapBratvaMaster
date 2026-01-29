@@ -11,13 +11,9 @@ const commands = {
         const { sock, msg, prefix, senderNumber } = ctx;
         
         const menuText = `${HEADER}
-╭━━━⪩ 🇨🇦 INFO ⪨━━━
-│🇨🇦 Bot: *${settings.botName}*
-│🇨🇦 Dono: *${settings.ownerName}*
-│🇨🇦 Usuario: *@${senderNumber || 'user'}*
-│🇨🇦 Prefixo: *[${prefix}]*
-│🇨🇦 Versao: *${settings.botVersion}*
-╰━━━━━─「🇨🇦」─━━━━━
+
+🇨🇦 Prefixo: *[${prefix}]*
+
 ╭━━━⪩ *MENUS* ⪨━━━
 │🇨🇦 ${prefix}menubrincadeiras
 │🇨🇦 ${prefix}menuadmin
@@ -29,7 +25,6 @@ const commands = {
 │🇨🇦 ${prefix}menueconomia
 │🇨🇦 ${prefix}menuconsultas
 │🇨🇦 ${prefix}menuguerra
-│🇨🇦 ${prefix}sms
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ *DIVERSOS* ⪨━━━
 │🇨🇦 ${prefix}ping
@@ -116,8 +111,8 @@ const commands = {
 │🇨🇦 ${prefix}add 55xxxx
 │🇨🇦 ${prefix}promote @user
 │🇨🇦 ${prefix}demote @user
-│🇨🇦 ${prefix}advertir @user
-│🇨🇦 ${prefix}advertidos
+│🇨🇦 ${prefix}d - apagar msg
+│🇨🇦 ${prefix}band - ban + apagar
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ ⚙️ *GRUPO* ⪨━━━
 │🇨🇦 ${prefix}mute
@@ -126,34 +121,30 @@ const commands = {
 │🇨🇦 ${prefix}revoke
 │🇨🇦 ${prefix}rename [nome]
 │🇨🇦 ${prefix}desc [texto]
-│🇨🇦 ${prefix}foto [imagem]
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ 🛡️ *PROTECAO* ⪨━━━
 │🇨🇦 ${prefix}antilink 1/0
-│🇨🇦 ${prefix}antilinkhard 1/0
+│🇨🇦 ${prefix}antilocf 1/0
+│🇨🇦 ${prefix}antipag 1/0
 │🇨🇦 ${prefix}antiflood 1/0
-│🇨🇦 ${prefix}antipalavrao 1/0
-│🇨🇦 ${prefix}antifake 1/0
-│🇨🇦 ${prefix}antiimg 1/0
-│🇨🇦 ${prefix}antivideo 1/0
-│🇨🇦 ${prefix}antiaudio 1/0
-│🇨🇦 ${prefix}antisticker 1/0
+╰━━━━━─「🇨🇦」─━━━━━
+╭━━━⪩ ❓ *INFO COMANDOS* ⪨━━━
+│🇨🇦 ${prefix}infoantilink
+│🇨🇦 ${prefix}infoantiloc
+│🇨🇦 ${prefix}infoantipag
+│🇨🇦 ${prefix}infod
+│🇨🇦 ${prefix}infoband
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ 📝 *AUTOMACAO* ⪨━━━
 │🇨🇦 ${prefix}welcome 1/0
 │🇨🇦 ${prefix}goodbye 1/0
 │🇨🇦 ${prefix}setwelcome [msg]
 │🇨🇦 ${prefix}setgoodbye [msg]
-│🇨🇦 ${prefix}autosticker 1/0
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ 📊 *INFO* ⪨━━━
 │🇨🇦 ${prefix}admins
 │🇨🇦 ${prefix}membros
 │🇨🇦 ${prefix}grupo
-│🇨🇦 ${prefix}listaddd [ddd]
-│🇨🇦 ${prefix}inativos
-│🇨🇦 ${prefix}anotacoes
-│🇨🇦 ${prefix}anotar [titulo|texto]
 ╰━━━━━─「🇨🇦」─━━━━━`;
         
         await sock.sendMessage(msg.key.remoteJid, { text: menuText });

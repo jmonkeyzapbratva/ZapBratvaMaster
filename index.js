@@ -18,9 +18,6 @@ let currentQR = null;
 let botConnected = false;
 
 const app = express();
-// Inicia servidores de ping
-startPingServer();
-setTimeout(startAutoPing, 10000); // Inicia após 10 segundos
 const PORT = process.env.PORT || 5000;
 
 let sock = null;
@@ -39,33 +36,23 @@ const startBot = async () => {
     logger.info(`WhatsApp Web Version: ${version.join('.')}`);
     
     sock = makeWASocket({
-    sock = makeWASocket({
-    version,
-    auth: {
-        creds: state.creds,
-        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' }))
-    },
-    // 🌟 CONFIGURAÇÃO CRÍTICA:
-    printQRInTerminal: false,  // Não mostra QR no terminal (reduz logs)
-    logger: pino({ level: 'fatal' }),  // Quase nenhum log
-    browser: ['Windows', 'Chrome', '121.0.0.0'],  // Windows comum
-    connectTimeoutMs: 60000,
-    defaultQueryTimeoutMs: 0,
-    keepAliveIntervalMs: 25000,  // Mais espaçado
-    emitOwnEvents: false,
-    fireInitQueries: false,  // NÃO faz consultas iniciais pesadas
-    generateHighQualityLinkPreview: false,
-    syncFullHistory: false,
-    markOnlineOnConnect: false,  // NUNCA mostra como "online"
-    mobile: false,  // Modo desktop normal
-    downloadHistory: false,  // Não baixa histórico
-    transactionOpts: { maxCommitRetries: 1 },  // Menos tentativas
-    // 🌟 NOVOS (versão mais recente do Baileys):
-    async fetchLatestMessage() { return null; },
-    async fetchMessagesFromWA() { return []; },
-    shouldSyncHistoryMessage() { return false; },
-    linkPreviewImageThumbnailWidth: 64,  // Miniatura pequena
-});
+        version,
+        auth: {
+            creds: state.creds,
+            keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' }))
+        },
+        printQRInTerminal: true,
+        logger: pino({ level: 'silent' }),
+        browser: ['BRATVA BOT', 'Chrome', '120.0.0'],
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 0,
+        keepAliveIntervalMs: 10000,
+        emitOwnEvents: false,
+        fireInitQueries: true,
+        generateHighQualityLinkPreview: true,
+        syncFullHistory: false,
+        markOnlineOnConnect: true
+    });
     
     sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
@@ -155,8 +142,158 @@ const startBackupSchedule = () => {
     logger.info(`Backup automático configurado (a cada ${settings.backupInterval / 1000 / 60 / 60} horas)`);
 };
 
-app.get('/', (req, res) => {
-    res.redirect('/qr');
+app.get('/', async (req, res) => {
+    if (botConnected) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BRATVA BOT - Conectado!</title>
+                <meta http-equiv="refresh" content="10">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                    }
+                    h1 { color: #00ff88; font-size: 2.5em; }
+                    .success {
+                        background: rgba(0,255,136,0.2);
+                        border: 2px solid #00ff88;
+                        padding: 40px;
+                        border-radius: 20px;
+                        text-align: center;
+                    }
+                    .emoji { font-size: 80px; }
+                </style>
+            </head>
+            <body>
+                <div class="success">
+                    <div class="emoji">✅</div>
+                    <h1>BOT CONECTADO!</h1>
+                    <p style="font-size: 1.3em;">Seu WhatsApp está conectado ao BRATVA BOT</p>
+                    <p>Mande <strong>!menu</strong> em qualquer conversa para testar</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+    
+    if (!currentQR) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BRATVA BOT - Aguardando</title>
+                <meta http-equiv="refresh" content="3">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                    }
+                    h1 { color: #ffaa00; }
+                    .loading {
+                        background: rgba(255,170,0,0.2);
+                        border: 2px solid #ffaa00;
+                        padding: 40px;
+                        border-radius: 20px;
+                        text-align: center;
+                    }
+                    .spinner {
+                        font-size: 60px;
+                        animation: spin 2s linear infinite;
+                    }
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+                </style>
+            </head>
+            <body>
+                <div class="loading">
+                    <div class="spinner">⏳</div>
+                    <h1>Gerando QR Code...</h1>
+                    <p>Aguarde, a página atualiza automaticamente</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+    
+    try {
+        const qrImage = await QRCode.toDataURL(currentQR, { width: 300, margin: 2 });
+        
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>BRATVA BOT - QR Code</title>
+                <meta http-equiv="refresh" content="30">
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        color: white;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    h1 { color: #00ff88; margin-bottom: 10px; }
+                    .qr-container {
+                        background: white;
+                        padding: 20px;
+                        border-radius: 20px;
+                        margin: 20px;
+                    }
+                    .qr-container img { display: block; }
+                    .instructions {
+                        background: rgba(255,255,255,0.1);
+                        padding: 20px 30px;
+                        border-radius: 15px;
+                        text-align: left;
+                        max-width: 400px;
+                    }
+                    .step { margin: 10px 0; font-size: 1.1em; }
+                    .highlight { color: #00ff88; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <h1>🤖 BRATVA BOT</h1>
+                <p style="color: #aaa;">Escaneie o QR Code abaixo com seu WhatsApp</p>
+                
+                <div class="qr-container">
+                    <img src="${qrImage}" alt="QR Code" />
+                </div>
+                
+                <div class="instructions">
+                    <div class="step">1️⃣ Abra o <span class="highlight">WhatsApp</span> no celular</div>
+                    <div class="step">2️⃣ Vá em <span class="highlight">Configurações</span> (⚙️)</div>
+                    <div class="step">3️⃣ Toque em <span class="highlight">Dispositivos Conectados</span></div>
+                    <div class="step">4️⃣ Toque em <span class="highlight">Conectar Dispositivo</span></div>
+                    <div class="step">5️⃣ <span class="highlight">Aponte a câmera</span> para este QR Code</div>
+                </div>
+                
+                <p style="color: #888; margin-top: 20px;">⏳ O QR expira em 60s - a página atualiza automaticamente</p>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        res.status(500).send('Erro ao gerar QR Code');
+    }
 });
 
 app.get('/status', (req, res) => {
@@ -347,46 +484,6 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
     logger.error(`Promise rejeitada: ${reason}`);
 });
-
-// ==================== 🚀 AUTO-PING PARA RENDER ====================
-const startAutoPing = () => {
-    console.log('✅ Auto-ping iniciado (mantém Render acordado)');
-    
-    setInterval(async () => {
-        try {
-            const response = await fetch(`http://localhost:${PORT}/health`);
-            console.log(`🔄 Auto-ping realizado: ${response.status} - ${new Date().toLocaleTimeString()}`);
-        } catch (error) {
-            // Tenta pingar a si mesmo
-            try {
-                const app = express();
-                const tempServer = app.listen(0); // Porta aleatória
-                tempServer.close();
-                console.log('🔄 Fallback ping interno');
-            } catch (err) {
-                console.log('⚠️ Auto-ping falhou, tentando reiniciar...');
-            }
-        }
-    }, 5 * 60 * 1000); // A cada 5 minutos (menos que 15!)
-};
-
-// ==================== 🚀 SERVIDOR DE PING EXTERNO ====================
-const startPingServer = () => {
-    const pingApp = express();
-    const PING_PORT = 8080;
-    
-    pingApp.get('/ping', (req, res) => {
-        res.json({ 
-            status: 'alive', 
-            timestamp: new Date().toISOString(),
-            bot: 'BRATVA BOT'
-        });
-    });
-    
-    pingApp.listen(PING_PORT, '0.0.0.0', () => {
-        console.log(`📡 Servidor de ping na porta ${PING_PORT}`);
-    });
-};
 
 startBot().catch((err) => {
     logger.error(`Erro ao iniciar bot: ${err.message}`);

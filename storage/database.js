@@ -12,7 +12,8 @@ const dbFiles = {
     botAdmins: path.join(dataDir, 'bot-admins.json'),
     banned: path.join(dataDir, 'banned.json'),
     stats: path.join(dataDir, 'stats.json'),
-    settings: path.join(dataDir, 'settings.json')
+    settings: path.join(dataDir, 'settings.json'),
+    customMedia: path.join(dataDir, 'custom-media.json')
 };
 
 const defaultData = {
@@ -25,7 +26,8 @@ const defaultData = {
         groupsJoined: 0,
         startTime: Date.now()
     },
-    settings: {}
+    settings: {},
+    customMedia: {}
 };
 
 const loadData = (type) => {
@@ -54,6 +56,8 @@ const db = {
                 welcome: true,
                 goodbye: true,
                 antiLink: false,
+                antiLocf: false,
+                antiPag: false,
                 antiFlood: false,
                 antiBadWords: false,
                 muted: false,
@@ -64,6 +68,9 @@ const db = {
             };
             saveData('groups', groups);
         }
+        // Garante campos novos para grupos existentes
+        if (groups[groupId].antiLocf === undefined) groups[groupId].antiLocf = false;
+        if (groups[groupId].antiPag === undefined) groups[groupId].antiPag = false;
         return groups[groupId];
     },
     
@@ -163,6 +170,28 @@ const db = {
         const settings = loadData('settings');
         settings[key] = value;
         return saveData('settings', settings);
+    },
+    
+    // Sistema de mídia customizável para comandos
+    getCustomMedia: (commandName) => {
+        const media = loadData('customMedia');
+        return media[commandName] || null;
+    },
+    
+    setCustomMedia: (commandName, data) => {
+        const media = loadData('customMedia');
+        media[commandName] = data;
+        return saveData('customMedia', media);
+    },
+    
+    removeCustomMedia: (commandName) => {
+        const media = loadData('customMedia');
+        delete media[commandName];
+        return saveData('customMedia', media);
+    },
+    
+    getAllCustomMedia: () => {
+        return loadData('customMedia');
     }
 };
 

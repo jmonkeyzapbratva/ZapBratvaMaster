@@ -164,6 +164,19 @@ node index.js
 
 ## Mudanças Recentes
 
+### Janeiro 2026 - Sistema de Proteção e Downloads
+- !antilink 1/0 - Bane e apaga mensagem de quem enviar links
+- !antilocf 1/0 - Bane e apaga mensagem de quem enviar localização
+- !antipag 1/0 - Bloqueia links de pagamento (PicPay, Pix, Nubank, etc)
+- !d - Apaga mensagem respondida (admin)
+- !band - Apaga mensagem e bane usuário
+- Sistema de info: !infoantilink, !infoantiloc, !infoantipag, !infod, !infoband
+- !play - Baixa áudio do YouTube via cobalt API
+- !ttk - Download TikTok
+- !insta - Download Instagram
+- !face - Download Facebook
+- Correção de LIDs para números reais em moderação
+
 ### Dezembro 2024 - Expansão Massiva
 - Sistema completo de consultas (IP, CEP, DDD, DNS, clima)
 - Comandos de guerra (nuke, destrava, banghost)

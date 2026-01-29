@@ -1,8 +1,8 @@
 # Configuração para deploy no Fly.io
 # Documentação: https://fly.io/docs/reference/configuration/
 
-app = "zapbratvamaster"
-primary_region = "iad"  # São Paulo, Brasil
+app = "bratva-bot-whatsapp"
+primary_region = "gru"  # São Paulo, Brasil
 
 [build]
   builder = "heroku/buildpacks:20"
@@ -22,4 +22,4 @@ primary_region = "iad"  # São Paulo, Brasil
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 256
+  memory_mb = 512

@@ -18,6 +18,22 @@ const handleGroupParticipants = async (sock, update) => {
             if (action === 'add') {
                 logger.info(`${number} entrou no grupo ${groupName}`);
                 
+                // Verifica se é o dono
+                const ownerNumber = settings.ownerNumber.replace(/\D/g, '');
+                if (number === ownerNumber || number === settings.ownerNumber) {
+                    await sock.sendMessage(id, {
+                        text: `╔♡━━━━━━━━━━━━━━━━━━━━━━♡╗
+║  🇨🇦 *ALIANCA BRATVA* 🇨🇦  ║
+╚♡━━━━━━━━━━━━━━━━━━━━━━♡╝
+
+👑 Olha, meu dono chegou, abram alas 🇨🇦
+
+@${number}`,
+                        mentions: [participant]
+                    });
+                    continue;
+                }
+                
                 if (groupSettings.welcome) {
                     let welcomeText = groupSettings.welcomeMsg || messages.welcome.text;
                     welcomeText = welcomeText

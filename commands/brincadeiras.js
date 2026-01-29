@@ -1,8 +1,109 @@
 const settings = require('../config/settings');
+const db = require('../storage/database');
 
 const HEADER = `╔♡━━━━━━━━━━━━━━━━━━━━━━♡╗
 ║  🇨🇦 *ALIANCA BRATVA* 🇨🇦  ║
 ╚♡━━━━━━━━━━━━━━━━━━━━━━♡╝`;
+
+// Função auxiliar para pegar 5 membros aleatórios
+async function getRandomMembers(sock, groupId, count = 5) {
+    try {
+        const metadata = await sock.groupMetadata(groupId);
+        const members = metadata.participants.map(p => p.id);
+        const shuffled = members.sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, Math.min(count, members.length));
+    } catch (e) {
+        return [];
+    }
+}
+
+// Frases para sorte alta (70-100)
+const frasesAltas = [
+    "🔥 VAI NA FÉ! Hoje é seu dia de glória!",
+    "⭐ Tá abençoado demais! Aproveita!",
+    "🎯 Pode ir sem medo, a sorte tá do seu lado!",
+    "💎 Tá com a estrela brilhando forte!",
+    "🚀 Nada vai te parar hoje! Manda ver!",
+    "🏆 Campeão! Sua sorte tá nas alturas!",
+    "✨ O universo conspira a seu favor!",
+    "🎰 Aposta que hoje você ganha!",
+    "👑 Rei da sorte! Vai com tudo!",
+    "🌟 Hoje você é intocável!"
+];
+
+// Frases para sorte média (40-69)
+const frasesMedias = [
+    "😎 Tá no caminho certo, segue firme!",
+    "🤔 Pode arriscar, mas com cuidado...",
+    "⚖️ Meio a meio, vai no feeling!",
+    "🎲 Dá pra tentar, mas não exagera!",
+    "🌤️ Tá ok, não é o melhor dia mas dá pra ir!",
+    "💭 Pensa bem antes de agir!",
+    "🔮 A sorte tá neutra, depende de você!",
+    "🎯 50/50, vai na sua intuição!"
+];
+
+// Frases para sorte baixa (0-39)
+const frasesBaixas = [
+    "💀 Para tudo! Hoje não é seu dia!",
+    "⚠️ Melhor ficar quietinho hoje...",
+    "🚫 Nem pensa em arriscar agora!",
+    "😬 Eita, melhor esperar outro dia!",
+    "🙏 Reza forte e fica em casa!",
+    "❌ O universo disse NÃO!",
+    "🥶 Tá azarado demais, cuidado!",
+    "💔 Não vai dar certo, desiste!",
+    "🌧️ Dia nublado pra você...",
+    "🐢 Vai devagar hoje, sem pressa!"
+];
+
+// Função para enviar resposta com mídia customizada
+async function sendWithCustomMedia(sock, remoteJid, defaultText, customMedia, mentions = [], replacements = {}) {
+    let text = defaultText;
+    
+    // Usa texto customizado se disponível
+    if (customMedia && customMedia.text) {
+        text = customMedia.text;
+        // Substitui variáveis
+        for (const [key, value] of Object.entries(replacements)) {
+            text = text.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+        }
+    }
+    
+    // Se tem mídia customizada
+    if (customMedia && customMedia.media) {
+        try {
+            const buffer = Buffer.from(customMedia.media.data, 'base64');
+            const mediaType = customMedia.media.type;
+            
+            if (mediaType === 'image') {
+                await sock.sendMessage(remoteJid, {
+                    image: buffer,
+                    caption: text,
+                    mentions
+                });
+            } else if (mediaType === 'video') {
+                await sock.sendMessage(remoteJid, {
+                    video: buffer,
+                    caption: text,
+                    mentions
+                });
+            } else if (mediaType === 'audio') {
+                await sock.sendMessage(remoteJid, { text, mentions });
+                await sock.sendMessage(remoteJid, {
+                    audio: buffer,
+                    mimetype: customMedia.media.mimetype || 'audio/mp4'
+                });
+            }
+            return;
+        } catch (e) {
+            console.log('[MEDIA] Erro ao enviar mídia customizada:', e.message);
+        }
+    }
+    
+    // Fallback: envia só texto
+    await sock.sendMessage(remoteJid, { text, mentions });
+}
 
 const brincadeirasCommands = {
 
@@ -256,10 +357,11 @@ const brincadeirasCommands = {
     },
 
     async gay(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted || (senderNumber + '@s.whatsapp.net');
 
         const porcentagem = Math.floor(Math.random() * 101);
@@ -277,10 +379,11 @@ const brincadeirasCommands = {
     },
 
     async gado(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted || (senderNumber + '@s.whatsapp.net');
 
         const porcentagem = Math.floor(Math.random() * 101);
@@ -298,10 +401,11 @@ const brincadeirasCommands = {
     },
 
     async corno(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted || (senderNumber + '@s.whatsapp.net');
 
         const porcentagem = Math.floor(Math.random() * 101);
@@ -322,10 +426,11 @@ const brincadeirasCommands = {
     },
 
     async gostoso(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted || (senderNumber + '@s.whatsapp.net');
 
         const porcentagem = Math.floor(Math.random() * 101);
@@ -343,58 +448,67 @@ const brincadeirasCommands = {
     },
 
     async beijar(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid, customMedia } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted;
 
         if (!target) {
             return await sock.sendMessage(remoteJid, { text: '❌ Marque alguém para beijar!' });
         }
 
-        await sock.sendMessage(remoteJid, {
-            text: `${HEADER}
+        const defaultText = `${HEADER}
 ╭━━━⪩ 💋 *BEIJO* ⪨━━━
 │🇨🇦 
 │🇨🇦 @${senderNumber} deu um beijo
 │🇨🇦 apaixonado em @${target.split('@')[0]}!
 │🇨🇦 
 │🇨🇦 💋💕
-╰━━━━━─「🇨🇦」─━━━━━`,
-            mentions: [senderNumber + '@s.whatsapp.net', target]
-        });
+╰━━━━━─「🇨🇦」─━━━━━`;
+
+        await sendWithCustomMedia(
+            sock, remoteJid, defaultText, customMedia,
+            [senderNumber + '@s.whatsapp.net', target],
+            { user: `@${senderNumber}`, target: `@${target.split('@')[0]}` }
+        );
     },
 
     async tapa(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid, customMedia } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted;
 
         if (!target) {
             return await sock.sendMessage(remoteJid, { text: '❌ Marque alguém para dar um tapa!' });
         }
 
-        await sock.sendMessage(remoteJid, {
-            text: `${HEADER}
+        const defaultText = `${HEADER}
 ╭━━━⪩ 👋 *TAPA* ⪨━━━
 │🇨🇦 
 │🇨🇦 @${senderNumber} deu um TAPA
 │🇨🇦 na cara de @${target.split('@')[0]}!
 │🇨🇦 
 │🇨🇦 👋💥
-╰━━━━━─「🇨🇦」─━━━━━`,
-            mentions: [senderNumber + '@s.whatsapp.net', target]
-        });
+╰━━━━━─「🇨🇦」─━━━━━`;
+
+        await sendWithCustomMedia(
+            sock, remoteJid, defaultText, customMedia,
+            [senderNumber + '@s.whatsapp.net', target],
+            { user: `@${senderNumber}`, target: `@${target.split('@')[0]}` }
+        );
     },
 
     async matar(ctx) {
-        const { sock, msg, mentions, senderNumber } = ctx;
+        const { sock, msg, mentions, senderNumber, getRealJid, customMedia } = ctx;
         const remoteJid = msg.key.remoteJid;
 
-        const quoted = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
         let target = mentions?.[0] || quoted;
 
         if (!target) {
@@ -414,17 +528,49 @@ const brincadeirasCommands = {
 
         const morte = mortes[Math.floor(Math.random() * mortes.length)];
 
-        await sock.sendMessage(remoteJid, {
-            text: `${HEADER}
+        const defaultText = `${HEADER}
 ╭━━━⪩ ☠️ *ASSASSINATO* ⪨━━━
 │🇨🇦 
 │🇨🇦 @${senderNumber} ${morte}
 │🇨🇦 de @${target.split('@')[0]}!
 │🇨🇦 
 │🇨🇦 ☠️💀
-╰━━━━━─「🇨🇦」─━━━━━`,
-            mentions: [senderNumber + '@s.whatsapp.net', target]
-        });
+╰━━━━━─「🇨🇦」─━━━━━`;
+
+        await sendWithCustomMedia(
+            sock, remoteJid, defaultText, customMedia,
+            [senderNumber + '@s.whatsapp.net', target],
+            { user: `@${senderNumber}`, target: `@${target.split('@')[0]}` }
+        );
+    },
+
+    // Comando comer (para o dono customizar)
+    async comer(ctx) {
+        const { sock, msg, mentions, senderNumber, getRealJid, customMedia } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        const quotedRaw = msg.message?.extendedTextMessage?.contextInfo?.participant;
+        const quoted = getRealJid ? getRealJid(quotedRaw) : quotedRaw;
+        let target = mentions?.[0] || quoted;
+
+        if (!target) {
+            return await sock.sendMessage(remoteJid, { text: '❌ Marque alguém!' });
+        }
+
+        const defaultText = `${HEADER}
+╭━━━⪩ 🍑 *COMEU* ⪨━━━
+│🇨🇦 
+│🇨🇦 @${senderNumber} comeu
+│🇨🇦 @${target.split('@')[0]}!
+│🇨🇦 
+│🇨🇦 🍑🔥
+╰━━━━━─「🇨🇦」─━━━━━`;
+
+        await sendWithCustomMedia(
+            sock, remoteJid, defaultText, customMedia,
+            [senderNumber + '@s.whatsapp.net', target],
+            { user: `@${senderNumber}`, target: `@${target.split('@')[0]}` }
+        );
     },
 
     async zoeira(ctx) {
@@ -478,6 +624,231 @@ const brincadeirasCommands = {
         await sock.sendMessage(remoteJid, { text: pegadinha });
     },
 
+    // ========== COMANDO SORTE ==========
+    async sorte(ctx) {
+        const { sock, msg, senderNumber } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        const numero = Math.floor(Math.random() * 101);
+        let frase, emoji, barra = '';
+        
+        // Monta barra visual
+        for (let i = 0; i < 10; i++) {
+            barra += i < Math.floor(numero / 10) ? '🟢' : '⚫';
+        }
+
+        if (numero >= 70) {
+            frase = frasesAltas[Math.floor(Math.random() * frasesAltas.length)];
+            emoji = '🍀';
+        } else if (numero >= 40) {
+            frase = frasesMedias[Math.floor(Math.random() * frasesMedias.length)];
+            emoji = '🎲';
+        } else {
+            frase = frasesBaixas[Math.floor(Math.random() * frasesBaixas.length)];
+            emoji = '💀';
+        }
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${emoji} *SUA SORTE* ⪨━━━
+│🇨🇦 @${senderNumber}
+│🇨🇦 
+│🇨🇦 ${barra}
+│🇨🇦 *${numero}%* de sorte
+│🇨🇦 
+│🇨🇦 ${frase}
+╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: [senderNumber + '@s.whatsapp.net']
+        });
+    },
+
+    // ========== RANKS ==========
+    async rankgay(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 🏳️‍🌈 *RANK GAY* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankpau(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        const sizes = ['30cm', '25cm', '22cm', '18cm', '15cm'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]} - ${sizes[i]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 🍆 *RANK DOTADOS* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankxrc(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ❄️ *RANK CHEIRADORES* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankhetero(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 💪 *RANK HÉTEROS* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankcorno(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        const chifres = ['🦌🦌🦌🦌🦌', '🦌🦌🦌🦌', '🦌🦌🦌', '🦌🦌', '🦌'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]} ${chifres[i]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 🦌 *RANK CORNOS* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankgado(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 🐂 *RANK GADOS* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankfeio(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 🤢 *RANK FEIOS* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
+    async rankbonito(ctx) {
+        const { sock, msg, isGroup } = ctx;
+        const remoteJid = msg.key.remoteJid;
+
+        if (!isGroup) return await sock.sendMessage(remoteJid, { text: '❌ Apenas em grupos!' });
+
+        const members = await getRandomMembers(sock, remoteJid, 5);
+        if (members.length === 0) return await sock.sendMessage(remoteJid, { text: '❌ Erro ao buscar membros!' });
+
+        let ranking = '';
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        members.forEach((m, i) => {
+            ranking += `│🇨🇦 ${medals[i]} @${m.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 😍 *RANK BONITOS* ⪨━━━
+${ranking}╰━━━━━─「🇨🇦」─━━━━━`,
+            mentions: members
+        });
+    },
+
     async menubrincadeiras(ctx) {
         const { sock, msg } = ctx;
         const remoteJid = msg.key.remoteJid;
@@ -491,13 +862,24 @@ const brincadeirasCommands = {
 │🇨🇦 ${prefix}motivacional
 │🇨🇦 ${prefix}conselho
 │🇨🇦 ${prefix}fato
-│🇨🇦 ${prefix}curiosidade
 │🇨🇦 ${prefix}zoeira
 │🇨🇦 ${prefix}pegadinha
 ╰━━━━━─「🇨🇦」─━━━━━
+╭━━━⪩ 🎲 *SORTE* ⪨━━━
+│🇨🇦 ${prefix}sorte
+╰━━━━━─「🇨🇦」─━━━━━
+╭━━━⪩ 🏆 *RANKS* ⪨━━━
+│🇨🇦 ${prefix}rankgay
+│🇨🇦 ${prefix}rankpau
+│🇨🇦 ${prefix}rankxrc
+│🇨🇦 ${prefix}rankhetero
+│🇨🇦 ${prefix}rankcorno
+│🇨🇦 ${prefix}rankgado
+│🇨🇦 ${prefix}rankfeio
+│🇨🇦 ${prefix}rankbonito
+╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ 👥 *INTERACAO* ⪨━━━
 │🇨🇦 ${prefix}ship
-│🇨🇦 ${prefix}casal
 │🇨🇦 ${prefix}gay @user
 │🇨🇦 ${prefix}gado @user
 │🇨🇦 ${prefix}corno @user

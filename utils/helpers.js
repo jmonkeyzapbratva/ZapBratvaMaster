@@ -28,6 +28,27 @@ const helpers = {
         return digits || number;
     },
     
+    isLid: (jid) => {
+        return jid && jid.includes('@lid');
+    },
+    
+    getRealJid: async (sock, groupId, lidJid) => {
+        if (!lidJid || !lidJid.includes('@lid')) {
+            return lidJid;
+        }
+        try {
+            const groupMeta = await sock.groupMetadata(groupId);
+            for (const p of groupMeta.participants) {
+                if (p.lid === lidJid || p.id === lidJid) {
+                    if (p.id && !p.id.includes('@lid')) {
+                        return p.id;
+                    }
+                }
+            }
+        } catch (e) {}
+        return lidJid;
+    },
+    
     isGroup: (jid) => {
         return jid.endsWith('@g.us');
     },

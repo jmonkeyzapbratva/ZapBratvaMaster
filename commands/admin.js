@@ -2,7 +2,191 @@ const messages = require('../config/messages');
 const helpers = require('../utils/helpers');
 const db = require('../storage/database');
 
+const HEADER = `╔♡━━━━━━━━━━━━━━━━━━━━━━♡╗
+║  🇨🇦 *ALIANCA BRATVA* 🇨🇦  ║
+╚♡━━━━━━━━━━━━━━━━━━━━━━♡╝`;
+
+// Info sobre comandos de proteção
+const commandInfos = {
+    antilink: {
+        name: 'ANTILINK',
+        emoji: '🔗',
+        desc: 'Bloqueia envio de links no grupo',
+        effect: 'Quando ativado, qualquer membro que enviar um link será BANIDO automaticamente e terá sua mensagem apagada.',
+        usage: '!antilink 1 (ativar) ou !antilink 0 (desativar)'
+    },
+    antilocf: {
+        name: 'ANTI-LOCALIZAÇÃO',
+        emoji: '📍',
+        desc: 'Bloqueia envio de localização no grupo',
+        effect: 'Quando ativado, qualquer membro que enviar localização será BANIDO automaticamente e terá sua mensagem apagada.',
+        usage: '!antilocf 1 (ativar) ou !antilocf 0 (desativar)'
+    },
+    antipag: {
+        name: 'ANTI-PAGAMENTO',
+        emoji: '💳',
+        desc: 'Bloqueia links de pagamento (Pix, PicPay, etc)',
+        effect: 'Quando ativado, links de pagamento como Pix, PicPay, MercadoPago, PayPal serão bloqueados e a mensagem apagada.',
+        usage: '!antipag 1 (ativar) ou !antipag 0 (desativar)'
+    },
+    antiflood: {
+        name: 'ANTI-FLOOD',
+        emoji: '🌊',
+        desc: 'Bloqueia spam de mensagens rápidas',
+        effect: 'Quando ativado, membros que enviarem muitas mensagens rapidamente serão avisados.',
+        usage: '!antiflood 1 (ativar) ou !antiflood 0 (desativar)'
+    },
+    welcome: {
+        name: 'BEM-VINDO',
+        emoji: '👋',
+        desc: 'Mensagem de boas-vindas para novos membros',
+        effect: 'Quando ativado, envia uma mensagem automática quando alguém entra no grupo.',
+        usage: '!welcome 1 (ativar) ou !welcome 0 (desativar)\n!setwelcome [mensagem] para personalizar'
+    },
+    d: {
+        name: 'DELETAR',
+        emoji: '🗑️',
+        desc: 'Apaga mensagem selecionada',
+        effect: 'Responda a uma mensagem e use o comando para apagá-la.',
+        usage: '!d (respondendo a mensagem)'
+    },
+    band: {
+        name: 'BAN + DELETE',
+        emoji: '🚫',
+        desc: 'Bane usuário e apaga mensagem',
+        effect: 'Responda a uma mensagem, o bot apaga a mensagem e bane o usuário.',
+        usage: '!band (respondendo a mensagem)'
+    }
+};
+
 const commands = {
+    // Comando info genérico
+    infoantilink: async (ctx) => {
+        const info = commandInfos.antilink;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
+    infoantiloc: async (ctx) => {
+        const info = commandInfos.antilocf;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
+    infoantipag: async (ctx) => {
+        const info = commandInfos.antipag;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
+    infoantiflood: async (ctx) => {
+        const info = commandInfos.antiflood;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
+    infowelcome: async (ctx) => {
+        const info = commandInfos.welcome;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
+    infod: async (ctx) => {
+        const info = commandInfos.d;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
+    infoband: async (ctx) => {
+        const info = commandInfos.band;
+        await ctx.sock.sendMessage(ctx.msg.key.remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ ${info.emoji} *${info.name}* ⪨━━━
+│🇨🇦 
+│🇨🇦 *Descrição:*
+│🇨🇦 ${info.desc}
+│🇨🇦 
+│🇨🇦 *Efeito:*
+│🇨🇦 ${info.effect}
+│🇨🇦 
+│🇨🇦 *Uso:*
+│🇨🇦 ${info.usage}
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
+    },
+
     ban: async (ctx) => {
         const { sock, msg, isGroup, isGroupAdmin, isBotGroupAdmin, groupId, args } = ctx;
         
@@ -276,18 +460,151 @@ const commands = {
     },
     
     antilink: async (ctx) => {
-        const { sock, msg, isGroup, isGroupAdmin, groupId } = ctx;
+        const { sock, msg, isGroup, isGroupAdmin, groupId, args } = ctx;
         
         if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notInGroup });
         if (!isGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notGroupAdmin });
         
-        const current = db.getGroup(groupId).antiLink;
-        const newValue = !current;
+        // Aceita 1/0 ou toggle
+        let newValue;
+        if (args[0] === '1') {
+            newValue = true;
+        } else if (args[0] === '0') {
+            newValue = false;
+        } else {
+            newValue = !db.getGroup(groupId).antiLink;
+        }
+        
         db.setGroup(groupId, 'antiLink', newValue);
         
         await sock.sendMessage(msg.key.remoteJid, {
-            text: newValue ? messages.success.antiLinkOn : messages.success.antiLinkOff
+            text: newValue 
+                ? '🔗 *ANTILINK* ativado!\n\n⚠️ Quem mandar link será *BANIDO* e terá a mensagem apagada!'
+                : '🔗 *ANTILINK* desativado!'
         });
+    },
+
+    antilocf: async (ctx) => {
+        const { sock, msg, isGroup, isGroupAdmin, groupId, args } = ctx;
+        
+        if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notInGroup });
+        if (!isGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notGroupAdmin });
+        
+        let newValue;
+        if (args[0] === '1') {
+            newValue = true;
+        } else if (args[0] === '0') {
+            newValue = false;
+        } else {
+            newValue = !db.getGroup(groupId).antiLocf;
+        }
+        
+        db.setGroup(groupId, 'antiLocf', newValue);
+        
+        await sock.sendMessage(msg.key.remoteJid, {
+            text: newValue 
+                ? '📍 *ANTI-LOCALIZAÇÃO* ativado!\n\n⚠️ Quem mandar localização será *BANIDO*!'
+                : '📍 *ANTI-LOCALIZAÇÃO* desativado!'
+        });
+    },
+
+    antipag: async (ctx) => {
+        const { sock, msg, isGroup, isGroupAdmin, groupId, args } = ctx;
+        
+        if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notInGroup });
+        if (!isGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notGroupAdmin });
+        
+        let newValue;
+        if (args[0] === '1') {
+            newValue = true;
+        } else if (args[0] === '0') {
+            newValue = false;
+        } else {
+            newValue = !db.getGroup(groupId).antiPag;
+        }
+        
+        db.setGroup(groupId, 'antiPag', newValue);
+        
+        await sock.sendMessage(msg.key.remoteJid, {
+            text: newValue 
+                ? '💳 *ANTI-PAGAMENTO* ativado!\n\n⚠️ Links de pagamento (Pix, PicPay, etc) serão bloqueados!'
+                : '💳 *ANTI-PAGAMENTO* desativado!'
+        });
+    },
+
+    // Comando para deletar mensagem respondida
+    d: async (ctx) => {
+        const { sock, msg, isGroup, isGroupAdmin, isBotGroupAdmin } = ctx;
+        
+        if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notInGroup });
+        if (!isGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notGroupAdmin });
+        if (!isBotGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.botNotAdmin });
+        
+        const quotedMsg = msg.message?.extendedTextMessage?.contextInfo;
+        if (!quotedMsg?.stanzaId) {
+            return await sock.sendMessage(msg.key.remoteJid, {
+                text: '❌ Responda a mensagem que deseja apagar!'
+            });
+        }
+        
+        try {
+            await sock.sendMessage(msg.key.remoteJid, {
+                delete: {
+                    remoteJid: msg.key.remoteJid,
+                    fromMe: false,
+                    id: quotedMsg.stanzaId,
+                    participant: quotedMsg.participant
+                }
+            });
+        } catch (error) {
+            await sock.sendMessage(msg.key.remoteJid, {
+                text: '❌ Não foi possível apagar a mensagem!'
+            });
+        }
+    },
+
+    // Comando para deletar mensagem e banir usuário
+    band: async (ctx) => {
+        const { sock, msg, isGroup, isGroupAdmin, isBotGroupAdmin, groupId } = ctx;
+        
+        if (!isGroup) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notInGroup });
+        if (!isGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.notGroupAdmin });
+        if (!isBotGroupAdmin) return await sock.sendMessage(msg.key.remoteJid, { text: messages.errors.botNotAdmin });
+        
+        const quotedMsg = msg.message?.extendedTextMessage?.contextInfo;
+        if (!quotedMsg?.stanzaId || !quotedMsg?.participant) {
+            return await sock.sendMessage(msg.key.remoteJid, {
+                text: '❌ Responda a mensagem da pessoa que deseja banir!'
+            });
+        }
+        
+        const target = quotedMsg.participant;
+        const number = helpers.extractNumber(target);
+        
+        try {
+            // Apaga a mensagem
+            await sock.sendMessage(msg.key.remoteJid, {
+                delete: {
+                    remoteJid: msg.key.remoteJid,
+                    fromMe: false,
+                    id: quotedMsg.stanzaId,
+                    participant: target
+                }
+            });
+            
+            // Bane o usuário
+            await sock.groupParticipantsUpdate(groupId, [target], 'remove');
+            
+            await sock.sendMessage(msg.key.remoteJid, {
+                text: `🚫 @${number} foi banido e teve sua mensagem apagada!`,
+                mentions: [target]
+            });
+        } catch (error) {
+            await sock.sendMessage(msg.key.remoteJid, {
+                text: `❌ Erro ao banir @${number}`,
+                mentions: [target]
+            });
+        }
     },
     
     antiflood: async (ctx) => {

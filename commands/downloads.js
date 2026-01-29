@@ -18,58 +18,78 @@ const downloadCommands = {
         }
 
         const query = args.join(' ');
+        
+        await sock.sendMessage(remoteJid, {
+            text: `${HEADER}
+╭━━━⪩ 🎵 *BAIXANDO* ⪨━━━
+│🇨🇦 *${query}*
+│🇨🇦 Aguarde...
+╰━━━━━─「🇨🇦」─━━━━━`
+        });
 
         try {
+            // Método 1: Tenta API gratuita de busca YouTube
+            let videoUrl = null;
+            
+            // Busca via scraping simples do YouTube
+            const searchResponse = await axios.get(
+                `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+                { 
+                    headers: { 'User-Agent': 'Mozilla/5.0' },
+                    timeout: 10000 
+                }
+            ).catch(() => null);
+            
+            if (searchResponse?.data) {
+                // Extrai videoId do HTML
+                const match = searchResponse.data.match(/\/watch\?v=([a-zA-Z0-9_-]{11})/);
+                if (match?.[1]) {
+                    videoUrl = `https://www.youtube.com/watch?v=${match[1]}`;
+                }
+            }
+            
+            if (videoUrl) {
+                // Tenta baixar via cobalt
+                const cobaltRes = await axios.post('https://co.wuk.sh/api/json', {
+                    url: videoUrl,
+                    aFormat: 'mp3',
+                    isAudioOnly: true
+                }, {
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    timeout: 30000
+                }).catch(() => null);
+
+                if (cobaltRes?.data?.url) {
+                    await sock.sendMessage(remoteJid, {
+                        audio: { url: cobaltRes.data.url },
+                        mimetype: 'audio/mpeg',
+                        ptt: false
+                    });
+                    return;
+                }
+            }
+
+            // Fallback: link de busca
             await sock.sendMessage(remoteJid, {
                 text: `${HEADER}
-╭━━━⪩ 🎵 *BUSCANDO* ⪨━━━
-│🇨🇦 "${query}"
-│🇨🇦 Aguarde...
+╭━━━⪩ 🎵 *MÚSICA* ⪨━━━
+│🇨🇦 *${query}*
+│🇨🇦 
+│🇨🇦 🔗 Clique para ouvir:
+│🇨🇦 https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' música')}
 ╰━━━━━─「🇨🇦」─━━━━━`
             });
 
-            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=1&key=AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM`;
-            
-            try {
-                const searchRes = await axios.get(searchUrl);
-                if (searchRes.data.items && searchRes.data.items.length > 0) {
-                    const video = searchRes.data.items[0];
-                    const videoId = video.id.videoId;
-                    const title = video.snippet.title;
-                    const channel = video.snippet.channelTitle;
-
-                    await sock.sendMessage(remoteJid, {
-                        text: `${HEADER}
-╭━━━⪩ 🎵 *MÚSICA ENCONTRADA* ⪨━━━
-│🇨🇦 *Título:* ${title}
-│🇨🇦 *Canal:* ${channel}
-│🇨🇦 *Link:* https://youtu.be/${videoId}
-╰━━━━━─「🇨🇦」─━━━━━
-
-⚠️ *Nota:* Download direto desabilitado.
-Use o link acima para ouvir!`
-                    });
-                } else {
-                    throw new Error('Nenhum resultado');
-                }
-            } catch (e) {
-                await sock.sendMessage(remoteJid, {
-                    text: `${HEADER}
-╭━━━⪩ 🎵 *BUSCAR MÚSICA* ⪨━━━
-│🇨🇦 "${query}"
-│🇨🇦 
-│🇨🇦 Busque em:
-│🇨🇦 • youtube.com
-│🇨🇦 • spotify.com
-│🇨🇦 • deezer.com
-╰━━━━━─「🇨🇦」─━━━━━`
-                });
-            }
-
         } catch (error) {
-            console.error('[DOWNLOAD] Erro play:', error.message);
+            console.log('[PLAY] Erro:', error.message);
             await sock.sendMessage(remoteJid, {
-                text: `❌ Erro ao buscar música.`
+                text: `${HEADER}
+╭━━━⪩ 🎵 *MÚSICA* ⪨━━━
+│🇨🇦 *${query}*
+│🇨🇦 
+│🇨🇦 🔗 Clique para ouvir:
+│🇨🇦 https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' música')}
+╰━━━━━─「🇨🇦」─━━━━━`
             });
         }
     },
@@ -121,10 +141,32 @@ Use o link acima para ouvir!`
             await sock.sendMessage(remoteJid, {
                 text: `${HEADER}
 ╭━━━⪩ 📱 *TIKTOK* ⪨━━━
-│🇨🇦 Processando...
+│🇨🇦 Baixando...
 ╰━━━━━─「🇨🇦」─━━━━━`
             });
 
+            // Tenta cobalt primeiro
+            const cobaltRes = await axios.post('https://co.wuk.sh/api/json', {
+                url: url,
+                vCodec: 'h264',
+                vQuality: '720'
+            }, {
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                timeout: 30000
+            }).catch(() => null);
+
+            if (cobaltRes?.data?.url) {
+                await sock.sendMessage(remoteJid, {
+                    video: { url: cobaltRes.data.url },
+                    caption: `${HEADER}
+╭━━━⪩ 📱 *TIKTOK* ⪨━━━
+│🇨🇦 Download concluído!
+╰━━━━━─「🇨🇦」─━━━━━`
+                });
+                return;
+            }
+
+            // Fallback tiklydown
             const apiUrl = `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(url)}`;
             const res = await axios.get(apiUrl, { timeout: 30000 });
 
@@ -151,13 +193,18 @@ Use o link acima para ouvir!`
         }
     },
 
+    // Alias para TikTok
+    async ttk(ctx) {
+        return await downloadCommands.tiktok(ctx);
+    },
+
     async instagram(ctx) {
         const { sock, msg, args } = ctx;
         const remoteJid = msg.key.remoteJid;
 
         if (!args[0]) {
             return await sock.sendMessage(remoteJid, {
-                text: `❌ Informe o link do Instagram!\n\n*Uso:* ${settings.prefix}instagram [link]`
+                text: `❌ Informe o link do Instagram!\n\n*Uso:* ${settings.prefix}insta [link]`
             });
         }
 
@@ -169,20 +216,70 @@ Use o link acima para ouvir!`
             });
         }
 
-        await sock.sendMessage(remoteJid, {
-            text: `${HEADER}
+        try {
+            await sock.sendMessage(remoteJid, {
+                text: `${HEADER}
 ╭━━━⪩ 📷 *INSTAGRAM* ⪨━━━
-│🇨🇦 "${url}"
-│🇨🇦 
-│🇨🇦 ⚠️ Download Instagram
-│🇨🇦 temporariamente indisponível.
+│🇨🇦 Baixando...
+╰━━━━━─「🇨🇦」─━━━━━`
+            });
+
+            // Tenta cobalt
+            const cobaltRes = await axios.post('https://co.wuk.sh/api/json', {
+                url: url,
+                vCodec: 'h264',
+                vQuality: '720'
+            }, {
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                timeout: 30000
+            }).catch(() => null);
+
+            if (cobaltRes?.data?.url) {
+                // Detecta se é imagem ou vídeo
+                const mediaUrl = cobaltRes.data.url;
+                if (mediaUrl.includes('.jpg') || mediaUrl.includes('.png') || mediaUrl.includes('image')) {
+                    await sock.sendMessage(remoteJid, {
+                        image: { url: mediaUrl },
+                        caption: `${HEADER}
+╭━━━⪩ 📷 *INSTAGRAM* ⪨━━━
+│🇨🇦 Download concluído!
+╰━━━━━─「🇨🇦」─━━━━━`
+                    });
+                } else {
+                    await sock.sendMessage(remoteJid, {
+                        video: { url: mediaUrl },
+                        caption: `${HEADER}
+╭━━━⪩ 📷 *INSTAGRAM* ⪨━━━
+│🇨🇦 Download concluído!
+╰━━━━━─「🇨🇦」─━━━━━`
+                    });
+                }
+                return;
+            }
+
+            // Fallback
+            await sock.sendMessage(remoteJid, {
+                text: `${HEADER}
+╭━━━⪩ 📷 *INSTAGRAM* ⪨━━━
+│🇨🇦 ⚠️ Não foi possível baixar
 │🇨🇦 
 │🇨🇦 Tente: saveinsta.app
 ╰━━━━━─「🇨🇦」─━━━━━`
-        });
+            });
+
+        } catch (error) {
+            console.log('[INSTA] Erro:', error.message);
+            await sock.sendMessage(remoteJid, {
+                text: `❌ Erro ao baixar do Instagram. Tente novamente.`
+            });
+        }
     },
 
     async ig(ctx) {
+        return await downloadCommands.instagram(ctx);
+    },
+
+    async insta(ctx) {
         return await downloadCommands.instagram(ctx);
     },
 
@@ -217,22 +314,70 @@ Use o link acima para ouvir!`
 
         if (!args[0]) {
             return await sock.sendMessage(remoteJid, {
-                text: `❌ Informe o link do Facebook!\n\n*Uso:* ${settings.prefix}facebook [link]`
+                text: `❌ Informe o link do Facebook!\n\n*Uso:* ${settings.prefix}face [link]`
             });
         }
 
-        await sock.sendMessage(remoteJid, {
-            text: `${HEADER}
+        const url = args[0];
+
+        if (!url.includes('facebook.com') && !url.includes('fb.watch')) {
+            return await sock.sendMessage(remoteJid, {
+                text: `❌ Link inválido! Use um link do Facebook.`
+            });
+        }
+
+        try {
+            await sock.sendMessage(remoteJid, {
+                text: `${HEADER}
 ╭━━━⪩ 📘 *FACEBOOK* ⪨━━━
-│🇨🇦 ⚠️ Download Facebook
-│🇨🇦 temporariamente indisponível.
+│🇨🇦 Baixando...
+╰━━━━━─「🇨🇦」─━━━━━`
+            });
+
+            // Tenta cobalt
+            const cobaltRes = await axios.post('https://co.wuk.sh/api/json', {
+                url: url,
+                vCodec: 'h264',
+                vQuality: '720'
+            }, {
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                timeout: 30000
+            }).catch(() => null);
+
+            if (cobaltRes?.data?.url) {
+                await sock.sendMessage(remoteJid, {
+                    video: { url: cobaltRes.data.url },
+                    caption: `${HEADER}
+╭━━━⪩ 📘 *FACEBOOK* ⪨━━━
+│🇨🇦 Download concluído!
+╰━━━━━─「🇨🇦」─━━━━━`
+                });
+                return;
+            }
+
+            // Fallback
+            await sock.sendMessage(remoteJid, {
+                text: `${HEADER}
+╭━━━⪩ 📘 *FACEBOOK* ⪨━━━
+│🇨🇦 ⚠️ Não foi possível baixar
 │🇨🇦 
 │🇨🇦 Tente: fbdown.net
 ╰━━━━━─「🇨🇦」─━━━━━`
-        });
+            });
+
+        } catch (error) {
+            console.log('[FACE] Erro:', error.message);
+            await sock.sendMessage(remoteJid, {
+                text: `❌ Erro ao baixar do Facebook. Tente novamente.`
+            });
+        }
     },
 
     async fb(ctx) {
+        return await downloadCommands.facebook(ctx);
+    },
+
+    async face(ctx) {
         return await downloadCommands.facebook(ctx);
     },
 
@@ -377,24 +522,19 @@ ${lyrics}${res.data.lyrics.length > 3000 ? '\n\n[...continua]' : ''}`
 
         const menu = `${HEADER}
 ╭━━━⪩ 🎵 *MÚSICA* ⪨━━━
-│🇨🇦 ${prefix}play [nome]
+│🇨🇦 ${prefix}play [nome] - baixa áudio
 │🇨🇦 ${prefix}letra [nome]
-│🇨🇦 ${prefix}spotify [link]
 ╰━━━━━─「🇨🇦」─━━━━━
-╭━━━⪩ 🎬 *VIDEO* ⪨━━━
-│🇨🇦 ${prefix}video [nome/link]
-│🇨🇦 ${prefix}tiktok [link]
-│🇨🇦 ${prefix}instagram [link]
-│🇨🇦 ${prefix}twitter [link]
-│🇨🇦 ${prefix}facebook [link]
+╭━━━⪩ 🎬 *REDES SOCIAIS* ⪨━━━
+│🇨🇦 ${prefix}ttk [link] - TikTok
+│🇨🇦 ${prefix}insta [link] - Instagram
+│🇨🇦 ${prefix}face [link] - Facebook
+│🇨🇦 ${prefix}twitter [link] - Twitter/X
 ╰━━━━━─「🇨🇦」─━━━━━
 ╭━━━⪩ 🖼️ *IMAGEM* ⪨━━━
 │🇨🇦 ${prefix}img [termo]
 │🇨🇦 ${prefix}pinterest [termo]
-╰━━━━━─「🇨🇦」─━━━━━
-
-⚠️ *Alguns downloads podem estar
-temporariamente indisponíveis*`;
+╰━━━━━─「🇨🇦」─━━━━━`;
 
         await sock.sendMessage(remoteJid, { text: menu });
     }
